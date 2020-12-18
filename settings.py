@@ -21,10 +21,9 @@ DELTA_LAYER = -1
 SECOND_LAYER = 0 + DELTA_LAYER
 
 # Игрок
-HEIGHT_PLAYER = 200
-WIDTH_PLAYER = 79
-# Спрайт игрока по Y меньше на 17px, чем спрайт куба
+HEIGHT_PLAYER = 148
+WIDTH_PLAYER = 58
 # (значение используется для отрисовки и подсчёта координаты на экране)
 # Отступы для корректной отрисовки игрока
-MARGIN_TOP_PLAYER = -SCALED_CUBE_HEIGHT + SCALED_TOP_RECT_HEIGHT // 2
+MARGIN_TOP_PLAYER = -HEIGHT_PLAYER // 2 + SCALED_TOP_RECT_HEIGHT // 2
 MARGIN_LEFT_PLAYER = (SCALED_CUBE_WIDTH - WIDTH_PLAYER) // 2

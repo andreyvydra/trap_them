@@ -7,7 +7,7 @@ if __name__ == '__main__':
     pygame.display.set_caption("'КУБЫ!'")
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
-    level_map = Map('map/map.tmx')
+    level_map = Map()
     all_sprites = pygame.sprite.Group(level_map.get_sprites())
 
     running = True
