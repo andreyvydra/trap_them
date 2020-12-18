@@ -7,8 +7,8 @@ if __name__ == '__main__':
     pygame.display.set_caption("'КУБЫ!'")
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
-    level_map = Map()
-    all_sprites = pygame.sprite.Group(level_map.get_sprites())
+    level_map = Map('map')
+    level = Level(level_map)
 
     running = True
 
@@ -18,8 +18,8 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
 
-        all_sprites.update(pygame.mouse.get_pressed(3), pygame.mouse.get_pos())
-        all_sprites.draw(screen)
+        level.render(screen)
+        level.update(event)
 
         # Отрисовка сетки
         # for rect in level_map.floor:

@@ -1,4 +1,7 @@
+from pygame import MOUSEBUTTONDOWN
 from pygame import sprite, Rect
+from pygame.image import load
+
 from settings import *
 
 
@@ -19,8 +22,10 @@ class Block(Sprite):
 
 
 class Floor(Block):
-    def __init__(self, image, col, row, x, y, *groups):
-        super().__init__(image, col, row, x, y, *groups)
+    img = load('sprites/floor.png')
+
+    def __init__(self, col, row, x, y, *groups):
+        super().__init__(Floor.img, col, row, x, y, *groups)
         self.top_rect = Rect(x, y, SCALED_TOP_RECT_WIDTH,
                              SCALED_TOP_RECT_HEIGHT)
 
@@ -35,9 +40,11 @@ class Floor(Block):
 
 
 class Player(Sprite):
-    def __init__(self, map, image, col, row, x, y, *groups):
-        super().__init__(image, col, row, x, y, *groups)
-        self.map = map
+    img = load('sprites/gg_sprite.png')
+
+    def __init__(self, level, col, row, x, y, *groups):
+        super().__init__(Player.img, col, row, x, y, *groups)
+        self.level = level
         self.on_target = False
 
     def change_cords(self, x, y, cell):
@@ -47,9 +54,8 @@ class Player(Sprite):
         self.rect.y = y
 
     def update(self, *args, **kwargs):
-        mouse_buttons, cords = args
-        if mouse_buttons[0]:
-            cell = self.map.get_cell_for_player(cords)
+        if args and args[0].type == MOUSEBUTTONDOWN:
+            cell = self.level.get_cell_for_player(args[0].pos)
             if cell is not None:
-                x, y = self.map.get_cords_for_player(cell[0], cell[1])
+                x, y = self.level.get_cords_for_player(cell[0], cell[1])
                 self.change_cords(x, y, cell)

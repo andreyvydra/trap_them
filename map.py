@@ -5,64 +5,95 @@ from pygame.sprite import Group
 
 
 class Map:
-    def __init__(self, delta_x=SCALED_CUBE_WIDTH // 2, delta_y=30):
+    def __init__(self, path_map):
         # не нужно указывать размеры поля, программа возьмёт его по размеру файла
         with open('map/map.txt') as map_for_init:
             map_for_init = map_for_init.readlines()
             self.height = len(map_for_init)
             self.width = len(map_for_init[0].split())
-        self.board = [[0] * self.width for _ in range(self.height)]
+
+        self.path_map = path_map
+
+        self.first_layer = []
+        self.second_layer = []
+
+        self.load_map()
+
+    def load_map(self):
+        # Подгружаем наши layers
+        self.load_floor_layer()
+        self.load_characters_layer()
+
+    def load_floor_layer(self):
+        with open(self.path_map + '/map.txt') as current_file:
+            table = [row.split() for row in current_file]
+            for row in range(self.height):
+                row_list = []
+                for col in range(self.width):
+                    row_list.append(int(table[row][col]))
+                self.first_layer.append(row_list)
+
+    def load_characters_layer(self):
+        with open(self.path_map + '/characters.txt') as current_file:
+            table = [row.split() for row in current_file]
+            for row in range(self.height):
+                row_list = []
+                for col in range(self.width):
+                    row_list.append(int(table[row][col]))
+                self.second_layer.append(row_list)
+
+
+class Level:
+    def __init__(self, level_map):
+        self.level_map = level_map
 
         # Начальные x и y для отрисовки карты
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
-        self.y = CENTER_POINT[1] - self.height * SCALED_CUBE_HEIGHT // 4 - SCALED_CUBE_HEIGHT // 4
+        self.y = CENTER_POINT[1] - (self.level_map.height - 1) * SCALED_CUBE_HEIGHT // 4
 
         # Дельта смещения для отрисовки каждого блока относительно соседних
-        self.delta_x = delta_x
-        self.delta_y = delta_y
+        self.delta_x = SCALED_CUBE_WIDTH // 2
+        self.delta_y = SCALED_TOP_RECT_HEIGHT // 2
 
-        self.sprites = []
+        self.all_sprites = Group()
         self.floor = Group()
+
         self.load_sprites()
 
+    def render(self, screen):
+        self.all_sprites.draw(screen)
+
+    def update(self, *args, **kwargs):
+        self.all_sprites.update(*args, **kwargs)
+
     def load_sprites(self):
-        # как в куче метод нахождения родителей с помощью mod
-        # модом для слоя с персонажами является
-        current_layer = 0
-        for file in ['map/map.txt', 'map/characters.txt']:
-            with open(file) as current_file:
-                # перевод в список значений для каждой клетки
-                table = [row.split() for row in current_file]
-                for row in range(self.height):
-                    for col in range(self.width):
-                        sprite = table[row][col]
-                        if current_layer == 1:
-                            if int(sprite) == 1:
-                                # Для того, чтобы отображать игрока выше, чем землю
-                                # надо уменьшить row и col на -1 или прибавить SECOND_LAYER
-                                col += SECOND_LAYER
-                                row += SECOND_LAYER
-                                x = self.x + self.delta_x * (col - row)
-                                y = self.y + self.delta_y * (col + row)
-                                img = load('sprites/gg_sprite.png')
-                                sprite = Player(self, img, row, col, x + MARGIN_LEFT_PLAYER,
-                                                y + MARGIN_TOP_PLAYER)
-                        else:
-                            # при добавлении других спрайтов поля нужно дописать условия
-                            img = load('sprites/floor.png')
-                            x = self.x + self.delta_x * (col - row)
-                            y = self.y + self.delta_y * (col + row)
-                            sprite = Floor(img, row, col, x, y)
-                            self.floor.add(sprite)
-                        if not type(sprite) == str:
-                            # проверка, что это спрайт
-                            self.sprites.append(sprite)
-                current_layer += 1
+        # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
+        self.load_sprites_from_first_layer()
+        self.load_sprites_from_second_layer()
+
+    def load_sprites_from_first_layer(self):
+        for row in range(self.level_map.height):
+            for col in range(self.level_map.width):
+                x, y = self.get_cords_for_block(col, row)
+                Floor(col, row, x, y, self.all_sprites, self.floor)
+
+    def load_sprites_from_second_layer(self):
+        for row in range(self.level_map.height):
+            for col in range(self.level_map.width):
+                if self.level_map.first_layer[row][col] == 1:
+                    col, row = col + SECOND_LAYER, row + SECOND_LAYER
+                    x, y = self.get_cords_for_player(col, row)
+                    Player(self, col, row, x, y, self.all_sprites)
 
     def get_cords_for_player(self, col, row):
-        # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER
+        # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER
         x = self.x + self.delta_x * (row - col) + MARGIN_LEFT_PLAYER
         y = self.y + self.delta_y * (row + col) + MARGIN_TOP_PLAYER
+        return x, y
+
+    def get_cords_for_block(self, col, row):
+        x = self.x + self.delta_x * (row - col)
+        y = self.y + self.delta_y * (row + col)
         return x, y
 
     def get_cell_for_player(self, cords):
