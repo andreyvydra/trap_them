@@ -11,6 +11,8 @@ if __name__ == '__main__':
     level = Level(level_map)
 
     running = True
+    FPS = 60
+    clock = pygame.time.Clock()
 
     while running:
         screen.fill('#282828')
@@ -18,11 +20,12 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
 
-        level.render(screen)
         level.update(event)
+        level.render(screen)
 
         # Отрисовка сетки
         # for rect in level_map.floor:
         #    pygame.draw.rect(screen, (255, 255, 255), rect.top_rect, 1)
 
+        clock.tick(FPS)
         pygame.display.flip()

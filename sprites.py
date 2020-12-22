@@ -1,11 +1,9 @@
-from pygame import MOUSEBUTTONDOWN
-from pygame import sprite, Rect
-from pygame.image import load
+import pygame
 
 from settings import *
 
 
-class Sprite(sprite.Sprite):
+class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(*groups)
         self.image = image
@@ -22,11 +20,11 @@ class Block(Sprite):
 
 
 class Floor(Block):
-    img = load('sprites/floor.png')
+    img = pygame.image.load('sprites/floor.png')
 
     def __init__(self, col, row, x, y, *groups):
         super().__init__(Floor.img, col, row, x, y, *groups)
-        self.top_rect = Rect(x, y, SCALED_TOP_RECT_WIDTH,
+        self.top_rect = pygame.rect.Rect(x, y, SCALED_TOP_RECT_WIDTH,
                              SCALED_TOP_RECT_HEIGHT)
 
     def check_collide_top_rect(self, mouse_pos):
@@ -40,7 +38,7 @@ class Floor(Block):
 
 
 class Player(Sprite):
-    img = load('sprites/gg_sprite.png')
+    img = pygame.image.load('sprites/gg_sprite.png')
 
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Player.img, col, row, x, y, *groups)
@@ -54,8 +52,34 @@ class Player(Sprite):
         self.rect.y = y
 
     def update(self, *args, **kwargs):
-        if args and args[0].type == MOUSEBUTTONDOWN:
+        if args and args[0].type == pygame.MOUSEBUTTONDOWN:
             cell = self.level.get_cell_for_player(args[0].pos)
             if cell is not None:
                 x, y = self.level.get_cords_for_player(cell[0], cell[1])
                 self.change_cords(x, y, cell)
+                cell = (cell[0] + 1, cell[1] + 1)
+                Cage(self.level, *cell, *self.level.get_cords_for_block(cell[0] - 4, cell[1] - 4), self.level.all_sprites)
+
+
+class Cage(Sprite):
+    image = pygame.image.load('sprites/cage.png')
+
+    def __init__(self, level, col, row, x, y, *groups):
+        super().__init__(Cage.image, col, row, x, y, *groups)
+        self.level = level
+        self.velocity = 50
+        self.margin_top = (SCALED_CUBE_HEIGHT - self.image.get_height()) // 2
+        self.margin_left = (SCALED_CUBE_WIDTH - self.image.get_width()) // 2
+        self.rect.x += self.margin_left
+        self.rect.y += self.margin_top
+        self.top_rect_height = self.image.get_height() // 2
+
+    def update(self, *args, **kwargs):
+        self.rect.y -= self.top_rect_height
+        self.rect.y += 1
+        for floor in self.level.floor:
+            if floor.col == self.col and floor.row == self.row:
+                if self.rect.colliderect(floor.rect):
+                    self.rect.y -= 1
+                    break
+        self.rect.y += self.top_rect_height
