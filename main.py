@@ -11,7 +11,6 @@ if __name__ == '__main__':
     level = Level(level_map)
 
     running = True
-    FPS = 60
     clock = pygame.time.Clock()
 
     while running:

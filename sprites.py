@@ -25,7 +25,7 @@ class Floor(Block):
     def __init__(self, col, row, x, y, *groups):
         super().__init__(Floor.img, col, row, x, y, *groups)
         self.top_rect = pygame.rect.Rect(x, y, SCALED_TOP_RECT_WIDTH,
-                             SCALED_TOP_RECT_HEIGHT)
+                                         SCALED_TOP_RECT_HEIGHT)
 
     def check_collide_top_rect(self, mouse_pos):
         x, y = abs(self.top_rect.centerx - mouse_pos[0]), abs(self.top_rect.centery - mouse_pos[1])
@@ -43,22 +43,51 @@ class Player(Sprite):
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Player.img, col, row, x, y, *groups)
         self.level = level
-        self.on_target = False
+        # col_drawing используется, как переменная для отрисовки
+        self.drawing_col = col + SECOND_LAYER
+        self.drawing_row = row + SECOND_LAYER
+        self.coins = 5
+        self.flag = True
 
-    def change_cords(self, x, y, cell):
-        self.col = cell[0]
-        self.row = cell[1]
+        # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
+        # тк игрок немоментально отпускает кнопку
+        self.call_down = 300
+        self.last_click = 0
+
+    def change_cords(self, x, y):
         self.rect.x = x
         self.rect.y = y
 
+    def change_col_and_row(self, cell):
+        self.col = cell[0]
+        self.row = cell[1]
+        self.drawing_col = self.col + SECOND_LAYER
+        self.drawing_row = self.row + SECOND_LAYER
+
     def update(self, *args, **kwargs):
         if args and args[0].type == pygame.MOUSEBUTTONDOWN:
-            cell = self.level.get_cell_for_player(args[0].pos)
-            if cell is not None:
-                x, y = self.level.get_cords_for_player(cell[0], cell[1])
-                self.change_cords(x, y, cell)
-                cell = (cell[0] + 1, cell[1] + 1)
-                Cage(self.level, *cell, *self.level.get_cords_for_block(cell[0] - 4, cell[1] - 4), self.level.all_sprites)
+            if args[0].button == 1:
+                cell = self.level.get_cell_for_first_layer(args[0].pos)
+                if cell is not None:
+                    self.move(cell)
+            elif args[0].button == 3:
+                if self.last_click > self.call_down:
+                    # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
+                    cell = self.level.get_cell_for_first_layer(args[0].pos)
+                    if cell is not None:
+                        staring_cell = cell[0] - 4, cell[1] - 4
+                        if cell is not None and self.coins > 0:
+                            self.coins -= 1
+                            Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
+                                 self.level.all_sprites)
+                    self.last_click = 0
+        else:
+            self.last_click += 1000 // FPS
+
+    def move(self, cell):
+        self.change_col_and_row(cell)
+        x, y = self.level.get_cords_for_player((self.drawing_col, self.drawing_row))
+        self.change_cords(x, y)
 
 
 class Cage(Sprite):
@@ -67,19 +96,29 @@ class Cage(Sprite):
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Cage.image, col, row, x, y, *groups)
         self.level = level
-        self.velocity = 50
-        self.margin_top = (SCALED_CUBE_HEIGHT - self.image.get_height()) // 2
-        self.margin_left = (SCALED_CUBE_WIDTH - self.image.get_width()) // 2
+        self.velocity = 60
+
+        # Для отслеживания падения клетки
+        self.is_fallen = False
+
+        self.drawing_col = self.col + SECOND_LAYER
+        self.drawing_row = self.row + SECOND_LAYER
+
+        self.margin_left = (SCALED_CUBE_WIDTH - self.rect.width) // 2
+
+        self.top_rect_height = 60
         self.rect.x += self.margin_left
-        self.rect.y += self.margin_top
         self.top_rect_height = self.image.get_height() // 2
 
     def update(self, *args, **kwargs):
-        self.rect.y -= self.top_rect_height
-        self.rect.y += 1
-        for floor in self.level.floor:
-            if floor.col == self.col and floor.row == self.row:
-                if self.rect.colliderect(floor.rect):
-                    self.rect.y -= 1
+        if not self.is_fallen:
+            self.rect.y -= self.top_rect_height
+            self.rect.y += self.velocity // FPS
+            for floor in self.level.floor:
+                if floor.col == self.col and floor.row == self.row:
+                    if self.rect.colliderect(floor.rect):
+                        self.rect.y -= self.velocity // FPS
+                        self.is_fallen = True
                     break
-        self.rect.y += self.top_rect_height
+            self.rect.y += self.top_rect_height
+
