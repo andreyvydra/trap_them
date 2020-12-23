@@ -65,24 +65,28 @@ class Player(Sprite):
         self.drawing_row = self.row + SECOND_LAYER
 
     def update(self, *args, **kwargs):
-        if args and args[0].type == pygame.MOUSEBUTTONDOWN:
-            if args[0].button == 1:
-                cell = self.level.get_cell_for_first_layer(args[0].pos)
-                if cell is not None:
-                    self.move(cell)
-            elif args[0].button == 3:
-                if self.last_click > self.call_down:
-                    # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
+        if self.level.is_player_turn:
+            if args and args[0].type == pygame.MOUSEBUTTONDOWN:
+                if args[0].button == 1:
                     cell = self.level.get_cell_for_first_layer(args[0].pos)
                     if cell is not None:
-                        staring_cell = cell[0] - 4, cell[1] - 4
-                        if cell is not None and self.coins > 0:
-                            self.coins -= 1
-                            Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
-                                 self.level.all_sprites)
-                    self.last_click = 0
-        else:
-            self.last_click += 1000 // FPS
+                        self.move(cell)
+                elif args[0].button == 3:
+                    if self.last_click > self.call_down:
+                        # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
+                        cell = self.level.get_cell_for_first_layer(args[0].pos)
+                        if cell is not None:
+                            staring_cell = cell[0] - 4, cell[1] - 4
+                            if cell is not None and self.coins > 0:
+                                self.coins -= 1
+                                Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
+                                     self.level.all_sprites)
+                        self.last_click = 0
+                # на колёсико мыши конец хода игрока
+                if args[0].button == 2:
+                    self.level.is_player_turn = False
+            else:
+                self.last_click += 1000 // FPS
 
     def move(self, cell):
         self.change_col_and_row(cell)
@@ -111,8 +115,9 @@ class Cage(Sprite):
         self.top_rect_height = self.image.get_height() // 2
 
     def update(self, *args, **kwargs):
+        self.rect.y -= self.top_rect_height
+
         if not self.is_fallen:
-            self.rect.y -= self.top_rect_height
             self.rect.y += self.velocity // FPS
             for floor in self.level.floor:
                 if floor.col == self.col and floor.row == self.row:
@@ -120,5 +125,60 @@ class Cage(Sprite):
                         self.rect.y -= self.velocity // FPS
                         self.is_fallen = True
                     break
-            self.rect.y += self.top_rect_height
 
+        else:
+            trapped_character = self.level.sprites_arr[self.row][self.col]
+            if trapped_character:
+                # kill потом заменю на смену непрозрачности до 0, за определённое время
+                self.level.sprites_arr[self.row][self.col] = None
+                if trapped_character[1].__class__ == Mob:
+                    self.level.player.coins += trapped_character[1].coins
+                trapped_character[1].kill()
+                self.kill()
+        self.rect.y += self.top_rect_height
+
+
+class Mob(Sprite):
+    # пока как заглушка спрайт гг
+    img = pygame.image.load('sprites/gg_sprite.png')
+
+    def __init__(self, level, col, row, x, y, *groups, coins=1, step=1):
+        super().__init__(Mob.img, col, row, x, y, *groups)
+        self.flag = False
+        self.level = level
+        # col_drawing используется, как переменная для отрисовки
+        self.drawing_col = col + SECOND_LAYER
+        self.drawing_row = row + SECOND_LAYER
+
+        # self.coins отвечает за вознаграждение за поимку
+        self.coins = 1
+        self.step = 1
+
+    def update(self, *args, **kwargs):
+        # АХТУНГ здесб не уверена, что нормально по очереди действия будут, чтобы после игрока мобы
+        # стандартно просто идёт навстречу, позже можно использовать алгоритм Дейкстры
+        # оставлю комменты, так что можно текст считать читаемым
+        # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
+        if not self.level.is_player_turn:
+            delta_row, delta_col = (max(min(self.level.player.row - self.row, self.step),
+                                        -self.step),
+                                    max(min(self.level.player.col - self.col, self.step),
+                                        -self.step))
+
+            self.move((delta_col, delta_row))
+            self.level.is_player_turn = True
+
+    def move(self, cell):
+        self.change_col_and_row(cell)
+        x, y = self.level.get_cords_for_player((self.drawing_col, self.drawing_row))
+        self.change_cords(x, y)
+
+    def change_cords(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def change_col_and_row(self, cell):
+        self.col = cell[0]
+        self.row = cell[1]
+        self.drawing_col = self.col + SECOND_LAYER
+        self.drawing_row = self.row + SECOND_LAYER

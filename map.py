@@ -12,6 +12,10 @@ class Map:
             self.height = len(map_for_init)
             self.width = len(map_for_init[0].split())
 
+            # массив со спрайтами, для каждой ячейки записывается спрайт 1 слоя и, если есть, 2 слоя
+            self.sprites_arr = [[[None, None] for _ in range(self.width)]
+                                for i in range(self.height)]
+
         self.path_map = path_map
 
         self.first_layer = []
@@ -46,6 +50,7 @@ class Map:
 class Level:
     def __init__(self, level_map):
         self.level_map = level_map
+        self.sprites_arr = level_map.sprites_arr
 
         # Начальные x и y для отрисовки карты
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
@@ -59,6 +64,8 @@ class Level:
         self.floor = Group()
 
         self.player = None
+
+        self.is_player_turn = True  # контроль ходов
 
         self.font = pygame.font.Font(None, 50)
 
@@ -84,15 +91,32 @@ class Level:
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 x, y = self.get_cords_for_block((col, row))
-                Floor(col, row, x, y, self.all_sprites, self.floor)
+                current_floor = Floor(col, row, x, y, self.all_sprites, self.floor)
+
+                # при загрузке спрайты первого слоя записываются сразу,
+                # по этим спрайтам будем находить столкновения
+                # скорей всего спрайты  понадобится, когда будем добавлять мобов
+                self.sprites_arr[row][col][0] = current_floor
 
     def load_sprites_from_second_layer(self):
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
-                if self.level_map.first_layer[row][col] == 1:
-                    col, row = col + SECOND_LAYER, row + SECOND_LAYER
-                    x, y = self.get_cords_for_player((col, row))
-                    self.player = Player(self, col, row, x, y, self.all_sprites)
+                sprite_num = self.level_map.second_layer[row][col]
+                if sprite_num != 0:
+                    if self.level_map.second_layer[row][col] == 1:
+                        current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
+                        x, y = self.get_cords_for_player((current_col, current_row))
+                        self.player = Player(self, current_col, current_row, x, y, self.all_sprites)
+
+                        # так как обрисовка героя требует смещения по row и col на -1, нужно добавить 1
+                        self.sprites_arr[current_row + 1][current_col + 1][1] = self.player
+
+                    elif self.level_map.second_layer[row][col] == 2:
+                        current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
+                        x, y = self.get_cords_for_player((current_col, current_row))
+                        new_mob = Mob(self, current_col, current_row, x, y, self.all_sprites)
+
+                        self.sprites_arr[current_row + 1][current_col + 1][1] = new_mob
 
     def get_cords_for_player(self, cell):
         # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER
@@ -118,4 +142,3 @@ class Level:
                 # Не забыть прибавить SECOND_LAYER для корректной отрисовки
                 return block.col, block.row
         return None
-
