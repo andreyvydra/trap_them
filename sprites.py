@@ -70,6 +70,8 @@ class Player(Sprite):
                 if self.last_click > self.call_down:
                     if args[0].button == 1:
                         cell = self.level.get_cell_for_first_layer(args[0].pos)
+                        self.level.sprites_arr[cell[1]][cell[0]][1] = self
+                        self.level.sprites_arr[self.row][self.col][1] = None
                         if cell is not None:
                             self.move(cell)
                     elif args[0].button == 3:
@@ -167,6 +169,9 @@ class Mob(Sprite):
             # min исключает ход правее/выше последней ячейк
             row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
             col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+            # в этом случае SECOND_LAYER не нужно учитывать
+            self.level.sprites_arr[row][col][1] = self
+            self.level.sprites_arr[self.row][self.col][1] = None
             block = self.level.sprites_arr[row][col][0]
             self.move((block.col, block.row))
             self.level.is_player_turn = True
