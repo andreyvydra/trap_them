@@ -89,10 +89,14 @@ class Level:
     def load_sprites_from_second_layer(self):
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
-                if self.level_map.first_layer[row][col] == 1:
-                    col, row = col + SECOND_LAYER, row + SECOND_LAYER
-                    x, y = self.get_cords_for_player((col, row))
+                if self.level_map.second_layer[row][col] == 1:
+                    drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+                    x, y = self.get_cords_for_player((drawing_col, drawing_row))
                     self.player = Player(self, col, row, x, y, self.all_sprites)
+                elif self.level_map.second_layer[row][col] == 20:
+                    drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+                    x, y = self.get_cords_for_block((drawing_col, drawing_row))
+                    Coin(self, col, row, x, y, self.all_sprites)
 
     def get_cords_for_player(self, cell):
         # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER
@@ -115,7 +119,6 @@ class Level:
     def get_cell_for_first_layer(self, cords):
         for block in self.floor:
             if block.check_collide_top_rect(cords):
-                # Не забыть прибавить SECOND_LAYER для корректной отрисовки
                 return block.col, block.row
         return None
 
