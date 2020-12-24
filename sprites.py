@@ -47,7 +47,7 @@ class Player(Sprite):
         self.drawing_col = col + SECOND_LAYER
         self.drawing_row = row + SECOND_LAYER
         self.coins = 5
-        self.flag = True
+        self.flag = False
 
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
@@ -67,12 +67,12 @@ class Player(Sprite):
     def update(self, *args, **kwargs):
         if self.level.is_player_turn:
             if args and args[0].type == pygame.MOUSEBUTTONDOWN:
-                if args[0].button == 1:
-                    cell = self.level.get_cell_for_first_layer(args[0].pos)
-                    if cell is not None:
-                        self.move(cell)
-                elif args[0].button == 3:
-                    if self.last_click > self.call_down:
+                if self.last_click > self.call_down:
+                    if args[0].button == 1:
+                        cell = self.level.get_cell_for_first_layer(args[0].pos)
+                        if cell is not None:
+                            self.move(cell)
+                    elif args[0].button == 3:
                         # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
                         cell = self.level.get_cell_for_first_layer(args[0].pos)
                         if cell is not None:
@@ -81,10 +81,10 @@ class Player(Sprite):
                                 self.coins -= 1
                                 Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
                                      self.level.all_sprites)
-                        self.last_click = 0
-                # на колёсико мыши конец хода игрока
-                if args[0].button == 2:
-                    self.level.is_player_turn = False
+                    # на колёсико мыши конец хода игрока
+                    if args[0].button == 2:
+                        self.level.is_player_turn = False
+                    self.last_click = 0
             else:
                 self.last_click += 1000 // FPS
 
@@ -128,7 +128,7 @@ class Cage(Sprite):
 
         else:
             trapped_character = self.level.sprites_arr[self.row][self.col]
-            if trapped_character:
+            if trapped_character and trapped_character[1]:
                 # kill потом заменю на смену непрозрачности до 0, за определённое время
                 self.level.sprites_arr[self.row][self.col] = None
                 if trapped_character[1].__class__ == Mob:
@@ -147,25 +147,28 @@ class Mob(Sprite):
         self.flag = False
         self.level = level
         # col_drawing используется, как переменная для отрисовки
-        self.drawing_col = col + SECOND_LAYER
-        self.drawing_row = row + SECOND_LAYER
+        self.drawing_col = col
+        self.drawing_row = row
 
         # self.coins отвечает за вознаграждение за поимку
-        self.coins = 1
-        self.step = 1
+        self.coins = coins
+        self.step = step
 
     def update(self, *args, **kwargs):
-        # АХТУНГ здесб не уверена, что нормально по очереди действия будут, чтобы после игрока мобы
         # стандартно просто идёт навстречу, позже можно использовать алгоритм Дейкстры
         # оставлю комменты, так что можно текст считать читаемым
         # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
         if not self.level.is_player_turn:
             delta_row, delta_col = (max(min(self.level.player.row - self.row, self.step),
-                                        -self.step),
+                                        -self.step) if self.level.player.row != self.row else 0,
                                     max(min(self.level.player.col - self.col, self.step),
-                                        -self.step))
-
-            self.move((delta_col, delta_row))
+                                        -self.step) if self.level.player.col != self.col else 0)
+            # далее проверяем получившиеся row и col, max исключает ход левее/ниже первой ячейки, а
+            # min исключает ход правее/выше последней ячейк
+            row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
+            col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+            block = self.level.sprites_arr[row][col][0]
+            self.move((block.col, block.row))
             self.level.is_player_turn = True
 
     def move(self, cell):

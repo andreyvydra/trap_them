@@ -103,18 +103,16 @@ class Level:
             for col in range(self.level_map.width):
                 sprite_num = self.level_map.second_layer[row][col]
                 if sprite_num != 0:
+                    current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
+                    x, y = self.get_cords_for_player((current_col, current_row))
                     if self.level_map.second_layer[row][col] == 1:
-                        current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
-                        x, y = self.get_cords_for_player((current_col, current_row))
                         self.player = Player(self, current_col, current_row, x, y, self.all_sprites)
 
-                        # так как обрисовка героя требует смещения по row и col на -1, нужно добавить 1
+                        # так как отрисовка героя требует смещения по row и col на -1, нужно добавить 1
                         self.sprites_arr[current_row + 1][current_col + 1][1] = self.player
 
                     elif self.level_map.second_layer[row][col] == 2:
-                        current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
-                        x, y = self.get_cords_for_player((current_col, current_row))
-                        new_mob = Mob(self, current_col, current_row, x, y, self.all_sprites)
+                        new_mob = Mob(self, current_col + 1, current_row + 1, x, y, self.all_sprites)
 
                         self.sprites_arr[current_row + 1][current_col + 1][1] = new_mob
 
