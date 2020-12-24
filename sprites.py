@@ -137,7 +137,7 @@ class Cage(Sprite):
                 if trapped_character[1].__class__ == Mob:
                     self.level.player.coins += trapped_character[1].coins
                 trapped_character[1].kill()
-                self.kill()
+            self.kill()
         self.rect.y += self.top_rect_height
 
 
