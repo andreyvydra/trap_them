@@ -115,6 +115,10 @@ class Level:
                         new_mob = Mob(self, current_col + 1, current_row + 1, x, y, self.all_sprites)
 
                         self.sprites_arr[current_row + 1][current_col + 1][1] = new_mob
+                    elif self.level_map.second_layer[row][col] == 20:
+                        drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+                        x, y = self.get_cords_for_block((drawing_col, drawing_row))
+                        Coin(self, col, row, x, y, self.all_sprites)
 
     def get_cords_for_player(self, cell):
         # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER

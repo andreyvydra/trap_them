@@ -47,7 +47,7 @@ class Player(Sprite):
         self.drawing_col = col + SECOND_LAYER
         self.drawing_row = row + SECOND_LAYER
         self.coins = 5
-        self.flag = False
+        self.flag = True
 
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
@@ -139,6 +139,20 @@ class Cage(Sprite):
                 trapped_character[1].kill()
             self.kill()
         self.rect.y += self.top_rect_height
+
+    class Coin(Sprite):
+        image = pygame.image.load('sprites/coin.png')
+
+        def __init__(self, level, col, row, x, y, *groups):
+            super().__init__(Coin.image, col, row, x, y, *groups)
+            self.drawing_col = col + SECOND_LAYER
+            self.drawing_row = row + SECOND_LAYER
+            self.level = level
+
+        def update(self, *args, **kwargs):
+            if self.level.player.col == self.col and self.level.player.row == self.row:
+                self.level.player.coins += 1
+                self.kill()
 
 
 class Mob(Sprite):
