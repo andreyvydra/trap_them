@@ -100,14 +100,14 @@ class Level:
                     current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
                     x, y = self.get_cords_for_player((current_col, current_row))
                     if sprite_num == 1:
-                        self.player = Player(self, current_col, current_row, x, y, self.all_sprites)
+                        self.player = Player(self, col, row, x, y, self.all_sprites)
                         # так как отрисовка героя требует смещения по row и col на -1, нужно добавить 1
-                        self.sprites_arr[current_row + 1][current_col + 1][1] = self.player
+                        self.sprites_arr[row][col][1] = self.player
 
                     elif sprite_num == 2:
-                        new_mob = Mob(self, current_col + 1, current_row + 1, x, y, self.all_sprites)
+                        new_mob = Mob(self, col, row, x, y, self.all_sprites)
 
-                        self.sprites_arr[current_row + 1][current_col + 1][1] = new_mob
+                        self.sprites_arr[row][col][1] = new_mob
                     elif sprite_num == 20:
                         current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
                         x, y = self.get_cords_for_block((current_col, current_row))

@@ -71,9 +71,9 @@ class Player(Sprite):
                     if args[0].button == 1:
                         cell = self.level.get_cell_for_first_layer(args[0].pos)
                         # SECOND_LAYER не учитываем
-                        self.level.sprites_arr[cell[1]][cell[0]][1] = self
-                        self.level.sprites_arr[self.row][self.col][1] = None
                         if cell is not None:
+                            self.level.sprites_arr[cell[1]][cell[0]][1] = self
+                            self.level.sprites_arr[self.row][self.col][1] = None
                             self.move(cell)
                     elif args[0].button == 3:
                         # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
