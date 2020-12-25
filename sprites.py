@@ -140,19 +140,20 @@ class Cage(Sprite):
             self.kill()
         self.rect.y += self.top_rect_height
 
-    class Coin(Sprite):
-        image = pygame.image.load('sprites/coin.png')
 
-        def __init__(self, level, col, row, x, y, *groups):
-            super().__init__(Coin.image, col, row, x, y, *groups)
-            self.drawing_col = col + SECOND_LAYER
-            self.drawing_row = row + SECOND_LAYER
-            self.level = level
+class Coin(Sprite):
+    image = pygame.image.load('sprites/coin.png')
 
-        def update(self, *args, **kwargs):
-            if self.level.player.col == self.col and self.level.player.row == self.row:
-                self.level.player.coins += 1
-                self.kill()
+    def __init__(self, level, col, row, x, y, *groups):
+        super().__init__(Coin.image, col, row, x, y, *groups)
+        self.drawing_col = col + SECOND_LAYER
+        self.drawing_row = row + SECOND_LAYER
+        self.level = level
+
+    def update(self, *args, **kwargs):
+        if self.level.player.col == self.col and self.level.player.row == self.row:
+            self.level.player.coins += 1
+            self.kill()
 
 
 class Mob(Sprite):
@@ -176,14 +177,17 @@ class Mob(Sprite):
         # оставлю комменты, так что можно текст считать читаемым
         # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
         if not self.level.is_player_turn:
+
             delta_row, delta_col = (max(min(self.level.player.row - self.row, self.step),
                                         -self.step) if self.level.player.row != self.row else 0,
                                     max(min(self.level.player.col - self.col, self.step),
                                         -self.step) if self.level.player.col != self.col else 0)
+
             # далее проверяем получившиеся row и col, max исключает ход левее/ниже первой ячейки, а
             # min исключает ход правее/выше последней ячейк
             row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
             col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+
             # в этом случае SECOND_LAYER не нужно учитывать
             self.level.sprites_arr[row][col][1] = self
             self.level.sprites_arr[self.row][self.col][1] = None

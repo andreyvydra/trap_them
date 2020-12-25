@@ -12,10 +12,6 @@ class Map:
             self.height = len(map_for_init)
             self.width = len(map_for_init[0].split())
 
-            # массив со спрайтами, для каждой ячейки записывается спрайт 1 слоя и, если есть, 2 слоя
-            self.sprites_arr = [[[None, None] for _ in range(self.width)]
-                                for i in range(self.height)]
-
         self.path_map = path_map
 
         self.first_layer = []
@@ -50,11 +46,13 @@ class Map:
 class Level:
     def __init__(self, level_map):
         self.level_map = level_map
-        self.sprites_arr = level_map.sprites_arr
+        self.sprites_arr = [[[None, None] for _ in range(self.level_map.width)]
+                            for i in range(self.level_map.height)]
 
         # Начальные x и y для отрисовки карты
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
         self.y = CENTER_POINT[1] - (self.level_map.height - 1) * SCALED_CUBE_HEIGHT // 4
+
 
         # Дельта смещения для отрисовки каждого блока относительно соседних
         self.delta_x = SCALED_CUBE_WIDTH // 2
@@ -63,9 +61,9 @@ class Level:
         self.all_sprites = Group()
         self.floor = Group()
 
-        self.player = None
+        self.is_player_turn = True
 
-        self.is_player_turn = True  # контроль ходов
+        self.player = None
 
         self.font = pygame.font.Font(None, 50)
 
@@ -92,10 +90,6 @@ class Level:
             for col in range(self.level_map.width):
                 x, y = self.get_cords_for_block((col, row))
                 current_floor = Floor(col, row, x, y, self.all_sprites, self.floor)
-
-                # при загрузке спрайты первого слоя записываются сразу,
-                # по этим спрайтам будем находить столкновения
-                # скорей всего спрайты  понадобится, когда будем добавлять мобов
                 self.sprites_arr[row][col][0] = current_floor
 
     def load_sprites_from_second_layer(self):
@@ -105,19 +99,18 @@ class Level:
                 if sprite_num != 0:
                     current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
                     x, y = self.get_cords_for_player((current_col, current_row))
-                    if self.level_map.second_layer[row][col] == 1:
+                    if sprite_num == 1:
                         self.player = Player(self, current_col, current_row, x, y, self.all_sprites)
-
                         # так как отрисовка героя требует смещения по row и col на -1, нужно добавить 1
                         self.sprites_arr[current_row + 1][current_col + 1][1] = self.player
 
-                    elif self.level_map.second_layer[row][col] == 2:
+                    elif sprite_num == 2:
                         new_mob = Mob(self, current_col + 1, current_row + 1, x, y, self.all_sprites)
 
                         self.sprites_arr[current_row + 1][current_col + 1][1] = new_mob
-                    elif self.level_map.second_layer[row][col] == 20:
-                        drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
-                        x, y = self.get_cords_for_block((drawing_col, drawing_row))
+                    elif sprite_num == 20:
+                        current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
+                        x, y = self.get_cords_for_block((current_col, current_row))
                         Coin(self, col, row, x, y, self.all_sprites)
 
     def get_cords_for_player(self, cell):
