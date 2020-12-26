@@ -130,13 +130,13 @@ class Cage(Sprite):
                     break
 
         else:
-            trapped_character = self.level.sprites_arr[self.row][self.col]
-            if trapped_character and trapped_character[1]:
+            trapped_character = self.level.sprites_arr[self.row][self.col][1]
+            if trapped_character and trapped_character:
                 # kill потом заменю на смену непрозрачности до 0, за определённое время
-                self.level.sprites_arr[self.row][self.col] = None
-                if trapped_character[1].__class__ == Mob:
-                    self.level.player.coins += trapped_character[1].coins
-                trapped_character[1].kill()
+                self.level.sprites_arr[self.row][self.col][1] = None
+                if trapped_character.__class__ == Mob:
+                    self.level.player.coins += trapped_character.coins
+                trapped_character.kill()
             self.kill()
         self.rect.y += self.top_rect_height
 
