@@ -101,7 +101,6 @@ class Level:
                     x, y = self.get_cords_for_player((current_col, current_row))
                     if sprite_num == 1:
                         self.player = Player(self, col, row, x, y, self.all_sprites)
-                        # так как отрисовка героя требует смещения по row и col на -1, нужно добавить 1
                         self.sprites_arr[row][col][1] = self.player
 
                     elif sprite_num == 2:

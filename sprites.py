@@ -121,22 +121,26 @@ class Cage(Sprite):
         self.rect.y -= self.top_rect_height
 
         if not self.is_fallen:
-            self.rect.y += self.velocity // FPS
-            for floor in self.level.floor:
-                if floor.col == self.col and floor.row == self.row:
-                    if self.rect.colliderect(floor.rect):
-                        self.rect.y -= self.velocity // FPS
-                        self.is_fallen = True
-                    break
+            if self.level.sprites_arr[self.row][self.col][1]:
+                self.rect.y += self.velocity // FPS
+                for floor in self.level.floor:
+                    if floor.col == self.col and floor.row == self.row:
+                        if self.rect.colliderect(floor.rect):
+                            self.rect.y -= self.velocity // FPS
+                            self.is_fallen = True
+                        break
+            else:
+                block = self.level.sprites_arr[self.row][self.col][0]
+                self.rect.y = block.rect.y - self.image.get_height()
 
         else:
-            trapped_character = self.level.sprites_arr[self.row][self.col]
-            if trapped_character and trapped_character[1]:
+            trapped_character = self.level.sprites_arr[self.row][self.col][1]
+            if trapped_character:
                 # kill потом заменю на смену непрозрачности до 0, за определённое время
-                self.level.sprites_arr[self.row][self.col] = None
-                if trapped_character[1].__class__ == Mob:
-                    self.level.player.coins += trapped_character[1].coins
-                trapped_character[1].kill()
+                self.level.sprites_arr[self.row][self.col][1] = None
+                if trapped_character.__class__ == Mob:
+                    self.level.player.coins += trapped_character.coins
+                trapped_character.kill()
             self.kill()
         self.rect.y += self.top_rect_height
 
@@ -174,7 +178,6 @@ class Mob(Sprite):
 
     def update(self, *args, **kwargs):
         # стандартно просто идёт навстречу, позже можно использовать алгоритм Дейкстры
-        # оставлю комменты, так что можно текст считать читаемым
         # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
         if not self.level.is_player_turn:
 
