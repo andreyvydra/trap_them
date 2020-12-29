@@ -61,7 +61,7 @@ def pause():
 
     while running:
         pause_surface.fill('#282828')
-        td = clock.tick(60) / 1000.0
+        td = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return 'quit'
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     mainloop = True
 
     while mainloop:
-        time_delta = clock.tick(60) / 1000.0
+        time_delta = clock.tick(FPS) / 1000.0
         if is_button_game_pressed:
             if game() == 'quit':
                 pygame.quit()
