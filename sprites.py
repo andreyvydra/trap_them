@@ -71,7 +71,8 @@ class Player(Sprite):
                     if args[0].button == 1:
                         cell = self.level.get_cell_for_first_layer(args[0].pos)
                         # SECOND_LAYER не учитываем
-                        if cell is not None:
+                        if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
+                                isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
                             self.level.sprites_arr[cell[1]][cell[0]][1] = self
                             self.level.sprites_arr[self.row][self.col][1] = None
                             self.move(cell)
@@ -177,7 +178,6 @@ class Mob(Sprite):
         # оставлю комменты, так что можно текст считать читаемым
         # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
         if not self.level.is_player_turn:
-
             delta_row, delta_col = (max(min(self.level.player.row - self.row, self.step),
                                         -self.step) if self.level.player.row != self.row else 0,
                                     max(min(self.level.player.col - self.col, self.step),
