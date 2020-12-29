@@ -24,6 +24,8 @@ def game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     is_pressed_escape = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                level.player.update(event)
             if event.type == pygame.QUIT:
                 return 'quit'
 
