@@ -182,11 +182,14 @@ class Mob(Sprite):
                                         -self.step) if self.level.player.row != self.row else 0,
                                     max(min(self.level.player.col - self.col, self.step),
                                         -self.step) if self.level.player.col != self.col else 0)
+            if abs(delta_col) + abs(delta_row) > 1:
+                delta_row = 0
 
             # далее проверяем получившиеся row и col, max исключает ход левее/ниже первой ячейки, а
             # min исключает ход правее/выше последней ячейк
             row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
             col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+
 
             # в этом случае SECOND_LAYER не нужно учитывать
             self.level.sprites_arr[row][col][1] = self
