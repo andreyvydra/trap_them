@@ -100,6 +100,7 @@ class Player(Sprite):
 
 class Cage(Sprite):
     image = pygame.image.load('sprites/cage.png')
+    trap_image = pygame.image.load('sprites/trap.png')
 
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Cage.image, col, row, x, y, *groups)
@@ -119,31 +120,41 @@ class Cage(Sprite):
         self.top_rect_height = self.image.get_height() // 2
 
     def update(self, *args, **kwargs):
-        self.rect.y -= self.top_rect_height
-
         if not self.is_fallen:
+            self.rect.y -= self.top_rect_height
             if self.level.sprites_arr[self.row][self.col][1]:
                 self.rect.y += self.velocity // FPS
-                for floor in self.level.floor:
-                    if floor.col == self.col and floor.row == self.row:
-                        if self.rect.colliderect(floor.rect):
-                            self.rect.y -= self.velocity // FPS
-                            self.is_fallen = True
-                        break
+                floor = self.level.sprites_arr[self.row][self.col][0]
+                if self.rect.colliderect(floor.rect):
+                    self.rect.y -= self.velocity // FPS
+                    self.is_fallen = True
+
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
+                self.image = Cage.trap_image
+            self.rect.y += self.top_rect_height
 
         else:
+            self.image = Cage.image
             trapped_character = self.level.sprites_arr[self.row][self.col][1]
             if trapped_character:
-                # kill потом заменю на смену непрозрачности до 0, за определённое время
-                self.level.sprites_arr[self.row][self.col][1] = None
-                if trapped_character.__class__ == Mob:
-                    self.level.player.coins += trapped_character.coins
-                trapped_character.kill()
+                timer = 0
+                alpha_channel = 255
+
+                while alpha_channel != 0:
+                    if timer % FPS == 0:
+                        alpha_channel -= 1
+                        self.image.set_alpha(alpha_channel)
+                        trapped_character.image.set_alpha(alpha_channel)
+                        self.level.all_sprites.draw(self.level.screen)
+                        pygame.display.flip()
+                    timer += 1
+
+            trapped_character.kill()
             self.kill()
-        self.rect.y += self.top_rect_height
+            if trapped_character.__class__ == Mob:
+                self.level.player.coins += trapped_character.coins
 
 
 class Coin(Sprite):
@@ -186,6 +197,7 @@ class Mob(Sprite):
                                         -self.step) if self.level.player.row != self.row else 0,
                                     max(min(self.level.player.col - self.col, self.step),
                                         -self.step) if self.level.player.col != self.col else 0)
+
             if abs(delta_col) + abs(delta_row) > 1:
                 delta_row = 0
 
@@ -200,6 +212,10 @@ class Mob(Sprite):
             self.level.sprites_arr[self.row][self.col][1] = None
             block = self.level.sprites_arr[row][col][0]
             self.move((block.col, block.row))
+            if (block.col == self.level.player.col
+                    and block.row == self.level.player.row):
+                self.level.game_over()
+                return
             self.level.is_player_turn = True
 
     def move(self, cell):

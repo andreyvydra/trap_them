@@ -6,7 +6,7 @@ from settings import *
 
 def game():
     level_map = Map('map')
-    level = Level(level_map)
+    level = Level(level_map, screen)
     running = True
     is_pressed_escape = False
     while running:
@@ -30,7 +30,7 @@ def game():
                 return 'quit'
 
         level.update(event)
-        level.render(screen)
+        level.render()
 
         # Отрисовка сетки
         # for rect in level_map.floor:
@@ -47,17 +47,17 @@ def pause():
     running = True
     continue_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((CENTER_POINT[0] - 50,
                                                                               CENTER_POINT[1] - 76),
-                                                                             (100, 50)),
+                                                                             (120, 50)),
                                                    text='Продолжать',
                                                    manager=pause_manager)
     back_to_menu_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((CENTER_POINT[0] - 50,
                                                                                   CENTER_POINT[1] - 25),
-                                                                                 (100, 50)),
+                                                                                 (120, 50)),
                                                        text='Главное меню',
                                                        manager=pause_manager)
     quit_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((CENTER_POINT[0] - 50,
                                                                           CENTER_POINT[1] + 26),
-                                                                         (100, 50)),
+                                                                         (120, 50)),
                                                text='Выйти',
                                                manager=pause_manager)
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     start_game_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((CENTER_POINT[0] - 50,
                                                                                 CENTER_POINT[1] - 25),
-                                                                               (100, 50)),
+                                                                               (120, 50)),
                                                      text='Играть',
                                                      manager=manager)
     mainloop = True

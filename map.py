@@ -43,14 +43,16 @@ class Map:
 
 
 class Level:
-    def __init__(self, level_map):
+    def __init__(self, level_map, screen):
         self.level_map = level_map
         self.sprites_arr = [[[None, None] for _ in range(self.level_map.width)]
                             for _ in range(self.level_map.height)]
+        self.screen = screen
 
         # Начальные x и y для отрисовки карты
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
         self.y = CENTER_POINT[1] - (self.level_map.height - 1) * SCALED_CUBE_HEIGHT // 4
+
 
         # Дельта смещения для отрисовки каждого блока относительно соседних
         self.delta_x = SCALED_CUBE_WIDTH // 2
@@ -68,16 +70,16 @@ class Level:
 
         self.load_sprites()
 
-    def render(self, screen):
-        self.render_number_of_coins(screen)
-        self.all_sprites.draw(screen)
-        self.render_players_moves(screen)
+    def render(self):
+        self.render_number_of_coins()
+        self.all_sprites.draw(self.screen)
+        self.render_players_moves()
 
-    def render_number_of_coins(self, screen):
+    def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
-        screen.blit(text, (20, 20))
+        self.screen.blit(text, (20, 20))
 
-    def render_players_moves(self, screen):
+    def render_players_moves(self):
         radius = 7
         x = [-1, 0, 0, 1]
         y = [0, -1, 1, 0]
@@ -87,7 +89,8 @@ class Level:
                 if not isinstance(self.sprites_arr[self.player.row + row][self.player.col + col][1], Mob):
                     cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
                                                                         self.player.row + row))
-                    pygame.draw.circle(screen, (255, 255, 0), (cur_x, cur_y), radius)
+                    pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
+
 
     def update(self, *args, **kwargs):
         self.all_sprites.update(*args, **kwargs)
@@ -154,3 +157,13 @@ class Level:
                 # Не забыть прибавить SECOND_LAYER для корректной отрисовки
                 return block.col, block.row
         return None
+
+    def game_over(self):
+        font = pygame.font.Font(None, 50)
+        text = font.render("Game over!", True, (100, 255, 100))
+        text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+        text_y = self.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
+        text_w = text.get_width()
+        text_h = text.get_height()
+        self.screen.blit(text, (text_x, text_y))
+        self.player.kill()
