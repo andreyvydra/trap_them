@@ -1,7 +1,6 @@
-from pygame.image import load
+import pygame
 from settings import *
 from sprites import *
-from pygame.sprite import Group
 
 
 class Map:
@@ -47,19 +46,19 @@ class Level:
     def __init__(self, level_map):
         self.level_map = level_map
         self.sprites_arr = [[[None, None] for _ in range(self.level_map.width)]
-                            for i in range(self.level_map.height)]
+                            for _ in range(self.level_map.height)]
 
         # Начальные x и y для отрисовки карты
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
         self.y = CENTER_POINT[1] - (self.level_map.height - 1) * SCALED_CUBE_HEIGHT // 4
 
-
         # Дельта смещения для отрисовки каждого блока относительно соседних
         self.delta_x = SCALED_CUBE_WIDTH // 2
         self.delta_y = SCALED_TOP_RECT_HEIGHT // 2
 
-        self.all_sprites = Group()
-        self.floor = Group()
+        self.all_sprites = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
+        self.floor = pygame.sprite.Group()
 
         self.is_player_turn = True
 
@@ -70,12 +69,25 @@ class Level:
         self.load_sprites()
 
     def render(self, screen):
+        self.render_number_of_coins(screen)
         self.all_sprites.draw(screen)
-        self.render_coins(screen)
+        self.render_players_moves(screen)
 
-    def render_coins(self, screen):
+    def render_number_of_coins(self, screen):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
         screen.blit(text, (20, 20))
+
+    def render_players_moves(self, screen):
+        radius = 7
+        x = [-1, 0, 0, 1]
+        y = [0, -1, 1, 0]
+        for col, row in zip(x, y):
+            if 0 <= self.player.col + col < self.level_map.width and \
+                    0 <= self.player.row + row < self.level_map.height:
+                if not isinstance(self.sprites_arr[self.player.row + row][self.player.col + col][1], Mob):
+                    cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
+                                                                        self.player.row + row))
+                    pygame.draw.circle(screen, (255, 255, 0), (cur_x, cur_y), radius)
 
     def update(self, *args, **kwargs):
         self.all_sprites.update(*args, **kwargs)
@@ -104,13 +116,19 @@ class Level:
                         self.sprites_arr[row][col][1] = self.player
 
                     elif sprite_num == 2:
-                        new_mob = Mob(self, col, row, x, y, self.all_sprites)
+                        new_mob = Mob(self, col, row, x, y, self.all_sprites, self.enemies)
 
                         self.sprites_arr[row][col][1] = new_mob
                     elif sprite_num == 20:
                         current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
                         x, y = self.get_cords_for_block((current_col, current_row))
                         Coin(self, col, row, x, y, self.all_sprites)
+
+    def get_cords_for_movement_circles(self, cell):
+        x, y = self.get_cords_for_block((cell[0], cell[1]))
+        x += SCALED_TOP_RECT_WIDTH // 2
+        y += SCALED_TOP_RECT_HEIGHT // 2
+        return x, y
 
     def get_cords_for_player(self, cell):
         # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER

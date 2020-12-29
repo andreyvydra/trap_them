@@ -71,7 +71,8 @@ class Player(Sprite):
                     if args[0].button == 1:
                         cell = self.level.get_cell_for_first_layer(args[0].pos)
                         # SECOND_LAYER не учитываем
-                        if cell is not None:
+                        if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
+                                isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
                             self.level.sprites_arr[cell[1]][cell[0]][1] = self
                             self.level.sprites_arr[self.row][self.col][1] = None
                             self.move(cell)
@@ -178,18 +179,21 @@ class Mob(Sprite):
 
     def update(self, *args, **kwargs):
         # стандартно просто идёт навстречу, позже можно использовать алгоритм Дейкстры
+        # оставлю комменты, так что можно текст считать читаемым
         # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
         if not self.level.is_player_turn:
-
             delta_row, delta_col = (max(min(self.level.player.row - self.row, self.step),
                                         -self.step) if self.level.player.row != self.row else 0,
                                     max(min(self.level.player.col - self.col, self.step),
                                         -self.step) if self.level.player.col != self.col else 0)
+            if abs(delta_col) + abs(delta_row) > 1:
+                delta_row = 0
 
             # далее проверяем получившиеся row и col, max исключает ход левее/ниже первой ячейки, а
             # min исключает ход правее/выше последней ячейк
             row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
             col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+
 
             # в этом случае SECOND_LAYER не нужно учитывать
             self.level.sprites_arr[row][col][1] = self
