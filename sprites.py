@@ -40,18 +40,19 @@ class Floor(Block):
 class Player(Sprite):
     img = pygame.image.load('sprites/gg_sprite.png')
 
-    def __init__(self, level, col, row, x, y, *groups):
+    def __init__(self, level, col, row, x, y, *groups, coins=5, steps=2):
         super().__init__(Player.img, col, row, x, y, *groups)
         self.level = level
         # col_drawing используется, как переменная для отрисовки
         self.drawing_col = col + SECOND_LAYER
         self.drawing_row = row + SECOND_LAYER
-        self.coins = 5
+        self.coins = coins
+        self.steps = steps
         self.flag = True
 
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
-        self.call_down = 300
+        self.call_down = 100
         self.last_click = 0
 
     def change_cords(self, x, y):
@@ -84,7 +85,7 @@ class Player(Sprite):
                             if cell is not None and self.coins > 0:
                                 self.coins -= 1
                                 Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
-                                     self.level.all_sprites)
+                                     self.level.all_sprites, self.level.cages)
                     # на колёсико мыши конец хода игрока
                     if args[0].button == 2:
                         self.level.is_player_turn = False
