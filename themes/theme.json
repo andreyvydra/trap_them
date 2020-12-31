@@ -23,15 +23,16 @@
          },
          "font":
          {
-             "name": "Arial",
-             "size": "14",
-             "bold": "0"
+             "name": "pixel",
+             "size": "24",
+             "bold": "0",
+             "italic": "0"
          },
          "misc":
          {
              "shape": "rounded_rectangle",
              "shape_corner_radius": "15",
-             "border_width": "1",
+             "border_width": "2",
              "tool_tip_delay": "1.0",
              "text_horiz_alignment": "center",
              "text_vert_alignment": "center",

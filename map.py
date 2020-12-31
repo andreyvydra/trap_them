@@ -107,6 +107,7 @@ class Level:
         self.load_sprites_from_second_layer()
 
     def load_data(self, data):
+        # Поочрёдно загрузить все типы объектов из даты сохранения
         self.load_floor(data['floor'])
         self.load_enemies(data['enemies'])
         self.load_coins(data['coins'])
