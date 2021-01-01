@@ -6,7 +6,7 @@ from random import sample, randrange
 
 
 class Map:
-    def __init__(self, path_map, difficulty=1, first_layer=None, second_layer=None):
+    def __init__(self, path_map, difficulty=2, first_layer=None, second_layer=None):
 
         self.difficulty = difficulty
         self.path_map = path_map
@@ -138,14 +138,13 @@ class Level:
                         cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
                                                                             self.player.row + row))
                         pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
-                    else:
-                        print(self.sprites_arr[self.player.row + row][self.player.col + col][1])
 
     def update(self, *args, **kwargs):
         if self.is_player_turn:
             self.all_sprites.update(*args, **kwargs)
         else:
             self.enemies.update()
+            self.cages.update()
             self.is_player_turn = True
 
     def load_sprites(self):
@@ -222,8 +221,6 @@ class Level:
 
                         self.sprites_arr[row][col][1] = new_mob
                     elif sprite_num == 20:
-                        current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
-                        x, y = self.get_cords_for_block((current_col, current_row))
                         Coin(self, col, row, x, y, self.all_sprites, self.coins)
 
     def get_cords_for_movement_circles(self, cell):
