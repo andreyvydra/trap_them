@@ -16,9 +16,11 @@ def game():
     else:
         level_map = Map('map')
         level_map.load_map()
-        level = Level(level_map)
+        level = Level(level_map, screen)
         level.load_sprites()
 
+    level_map = Map('map')
+    level = Level(level_map, screen)
     running = True
     is_pressed_escape = False
 
@@ -57,7 +59,7 @@ def game():
                 return 'quit'
 
         level.update(event)
-        level.render(screen)
+        level.render()
 
         # Отрисовка сетки
         # for rect in level_map.floor:

@@ -1,5 +1,5 @@
 import pygame
-
+from collections import deque
 from settings import *
 
 
@@ -120,30 +120,44 @@ class Cage(Sprite):
         self.top_rect_height = self.image.get_height() // 2
 
     def update(self, *args, **kwargs):
-        self.rect.y -= self.top_rect_height
-
         if not self.is_fallen:
-            self.rect.y += self.velocity // FPS
-            for floor in self.level.floor:
-                if floor.col == self.col and floor.row == self.row:
-                    if self.rect.colliderect(floor.rect):
-                        self.rect.y -= self.velocity // FPS
-                        self.is_fallen = True
-                    break
+            self.rect.y -= self.top_rect_height
+            if self.level.sprites_arr[self.row][self.col][1]:
+                self.rect.y += self.velocity // FPS
+                floor = self.level.sprites_arr[self.row][self.col][0]
+                if self.rect.colliderect(floor.rect):
+                    self.rect.y -= self.velocity // FPS
+                    self.is_fallen = True
 
-        else:
+            else:
+                block = self.level.sprites_arr[self.row][self.col][0]
+                self.rect.y = block.rect.y - self.image.get_height()
+                self.image = Cage.trap_image
+                self.level.sprites_arr[self.row][self.col][1] = self
+                self.is_fallen = True
+            self.rect.y += self.top_rect_height
+
+        elif self.level.sprites_arr[self.row][self.col][1] and \
+                self.level.sprites_arr[self.row][self.col][1].__class__ != Cage:
+            self.image = Cage.image
             trapped_character = self.level.sprites_arr[self.row][self.col][1]
-            print(trapped_character, self.level.sprites_arr[self.row][self.col])
-            if trapped_character:
-                # kill потом заменю на смену непрозрачности до 0, за определённое время
-                self.level.sprites_arr[self.row][self.col][1] = None
+            if trapped_character and trapped_character.__class__ != Cage:
+                timer = 0
+                alpha_channel = 255
+
+                while alpha_channel != 0:
+                    if timer % FPS == 0:
+                        alpha_channel -= 1
+                        self.image.set_alpha(alpha_channel)
+                        trapped_character.image.set_alpha(alpha_channel)
+                        self.level.all_sprites.draw(self.level.screen)
+                        pygame.display.flip()
+                    timer += 1
+
+                trapped_character.kill()
+                self.kill()
                 if trapped_character.__class__ == Mob:
                     self.level.player.coins += trapped_character.coins
-                trapped_character.kill()
-                if trapped_character.__class__ == Player:
-                    self.level.game_over = True
-            self.kill()
-        self.rect.y += self.top_rect_height
 
 
 class Coin(Sprite):
@@ -179,31 +193,102 @@ class Mob(Sprite):
 
     def update(self, *args, **kwargs):
         # стандартно просто идёт навстречу, позже можно использовать алгоритм Дейкстры
-        # оставлю комменты, так что можно текст считать читаемым
         # функция min исключает вариант > step, а max исключает вариант при отрицательном перемещении
         if not self.level.is_player_turn:
-            delta_row, delta_col = (max(min(self.level.player.row - self.row, self.step),
-                                        -self.step) if self.level.player.row != self.row else 0,
-                                    max(min(self.level.player.col - self.col, self.step),
-                                        -self.step) if self.level.player.col != self.col else 0)
-            if abs(delta_col) + abs(delta_row) > 1:
-                delta_row = 0
+            self.target = self.level.player
+            if self.level.difficulty == 1:
+                delta_row, delta_col = (max(min(self.target.row - self.row, self.step),
+                                            -self.step) if self.target.row != self.row else 0,
+                                        max(min(self.level.player.col - self.col, self.step),
+                                            -self.step) if self.level.player.col != self.col else 0)
 
-            # далее проверяем получившиеся row и col, max исключает ход левее/ниже первой ячейки, а
-            # min исключает ход правее/выше последней ячейк
-            row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
-            col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+                # также на мирном уровне сложности delta_row обнуляется, при разнице в обеих координатах
+                if abs(delta_col) + abs(delta_row) > 1:
+                    delta_row = 0
 
+                # далее проверяем получившиеся row и col, max исключает ход леве9е/ниже первой ячейки, а
+                # min исключает ход правее/выше последней ячейк
+                row = min(max(self.row + delta_row, 0), self.level.level_map.height - 1)
+                col = min(max(self.col + delta_col, 0), self.level.level_map.width - 1)
+
+                cells = [(col, row)]
+
+            else:
+                path = self.voln(self.row, self.col, self.target.row, self.target.col)
+                if not path:
+                    # далее моб будет идти к любой ловушке, чтобы осовободить проход к игроку
+                    # при этом то, что большинство будет идти к одной клетке, поможет пробить оборону
+                    self.target = list(filter(lambda x: x[1].__class__ == Cage,
+                                           self.level.sprites_arr))[0]
+                    # так как невозможность добраться до игрока связано с клеткой,
+                    # то добраться до клетки можно всегда
+                    cells = [self.voln(self.row,
+                                       self.col,
+                                       self.target.row,
+                                       self.target.col)[1:1 + self.step]]
+                else:
+                    # пропускаем первую ячейку, откуда начинаетсся движение
+                    cells = path[1:1 + self.step]
+            self.level.sprites_arr[self.row][self.col][1] = None
+            for cell in cells:
+                self.move(cell)
 
             # в этом случае SECOND_LAYER не нужно учитывать
-            self.level.sprites_arr[row][col][1] = self
-            self.level.sprites_arr[self.row][self.col][1] = None
-            block = self.level.sprites_arr[row][col][0]
-            self.move((block.col, block.row))
-            self.level.is_player_turn = True
+            self.level.sprites_arr[self.row][self.col][1] = self
+            block = self.level.sprites_arr[self.row][self.col][0]
+            if (block.col == self.level.player.col
+                    and block.row == self.level.player.row):
+                self.level.game_over()
+                return
 
-        if self.level.player.col == self.col and self.level.player.row == self.row:
-            self.level.game_over = True
+    def voln(self, x, y, x1, y1):
+        path = []
+        board = []
+        for row in range(self.level.level_map.height):
+            board.append([])
+            for col in range(self.level.level_map.width):
+                board[row].append([1000, (row, col)]
+                                  if self.level.sprites_arr[row][col][1].__class__ != Cage
+                                  else [-1, (row, col)])
+            # так как у нас координаты заданы по-другому в загрузке карты
+            board[row] = board[row][::-1]
+        queue = deque()
+        queue.append((x, y))
+        self.get_to_all_neighbors(x, y, board, queue,
+                                  [[False] * self.level.level_map.width
+        for _ in range(self.level.level_map.height)])
+        end_cur = board[x1][y1][0]
+        while end_cur != 0:
+            # использем связный список, чтобы находить, откуда мы пришли в ячейку
+            path.append((y1, x1))
+            x1, y1 = board[x1][y1][1]
+            end_cur -= 1
+        return path[::-1]
+
+    def get_to_all_neighbors(self, row, col, board, queue, visited):
+        # пока работает за O(n^4)
+        # board - список, [расстояние от моба, (координаты предыдущей ячейки)]
+        if board[row][col][0] == -1 or row == self.level.level_map.height - 1 and \
+                col == self.level.level_map.width - 1 or \
+                not(0 <= row < self.level.level_map.height - 1 and
+                    0 <= col < self.level.level_map.width):
+            return
+        delta_x = [-1, 0, 0, 1]
+        delta_y = [0, -1, 1, 0]
+        while queue:
+            row, col = queue.pop()
+            visited[row][col] = True
+            for delta_row, delta_col in zip(delta_y, delta_x):
+                if 0 <= delta_row + row < self.level.level_map.height and \
+                        0 <= delta_col + col < self.level.level_map.width:
+                    if board[row + delta_row][col + delta_col][0] > board[row][col][0] + 1 and \
+                        board[row + delta_row][col + delta_col][0] != -1:
+                        # сохраняем предыдущую ячейку, вместе с расстоянием
+                        board[row + delta_row][col + delta_col] = [board[row][col][0] + 1,
+                                                                   (row, col)]
+                if not visited[row + delta_row][col + delta_col]:
+                    queue.append((row + delta_row, col + delta_col))
+        return board
 
     def move(self, cell):
         self.change_col_and_row(cell)
