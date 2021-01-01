@@ -89,6 +89,20 @@ class Player(Sprite):
                     # на колёсико мыши конец хода игрока
                     if args[0].button == 2:
                         self.level.is_player_turn = False
+                        font = pygame.font.Font(None, 50)
+                        text = font.render("Enemies' move!", True, (100, 255, 100))
+                        text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                        text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
+                        text_w = text.get_width()
+                        text_h = text.get_height()
+                        self.level.screen.blit(text, (text_x, text_y))
+                        self.level.render()
+                        pygame.display.flip()
+                        ping_for_message = 10000000
+                        while ping_for_message != 0:
+                            ping_for_message -= 1
+
+                        self.level.screen.fill('#282828')
                     self.last_click = 0
             else:
                 self.last_click += 1000 // FPS
@@ -123,6 +137,7 @@ class Cage(Sprite):
 
     def update(self, *args, **kwargs):
         if not self.is_fallen:
+            self.level.cages.add(self)
             self.rect.y -= self.top_rect_height
             if self.level.sprites_arr[self.row][self.col][1]:
                 self.rect.y += self.velocity // FPS
@@ -134,29 +149,28 @@ class Cage(Sprite):
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
-                self.image = Cage.trap_image
+                self.image = Cage.trap_image.copy()
                 self.level.sprites_arr[self.row][self.col][1] = self
                 self.is_fallen = True
+                self.kill()
+                self.level.traps.add(self)
             self.rect.y += self.top_rect_height
 
         elif self.level.sprites_arr[self.row][self.col][1] and \
                 self.level.sprites_arr[self.row][self.col][1].__class__ != Cage:
-            self.image = Cage.image
+            self.image = Cage.image.copy()
             trapped_character = self.level.sprites_arr[self.row][self.col][1]
             if trapped_character and trapped_character.__class__ != Cage:
                 timer = 0
                 alpha_channel = 255
 
-                while alpha_channel != 0:
+                while alpha_channel > 0:
                     if timer % FPS == 0:
-                        alpha_channel -= 1
-                        img = self.image.copy()
-                        img.set_alpha(alpha_channel)
-                        self.image = img
-                        img = trapped_character.image.copy()
-                        img.set_alpha(alpha_channel)
-                        trapped_character.image = img
-                        self.level.all_sprites.draw(self.level.screen)
+                        self.level.screen.fill('#282828')
+                        alpha_channel -= 10
+                        self.image.set_alpha(alpha_channel)
+                        trapped_character.image.set_alpha(alpha_channel)
+                        self.level.render()
                         pygame.display.flip()
                     timer += 1
 
@@ -193,7 +207,6 @@ class Mob(Sprite):
         # col_drawing используется, как переменная для отрисовки
         self.drawing_col = col
         self.drawing_row = row
-        self.image = Mob.img
 
         # self.coins отвечает за вознаграждение за поимку
         self.coins = coins
