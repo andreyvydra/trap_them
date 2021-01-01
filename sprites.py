@@ -6,7 +6,7 @@ from settings import *
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(*groups)
-        self.image = image
+        self.image = image.copy()
         self.row = row
         self.col = col
         self.rect = self.image.get_rect()
@@ -101,6 +101,7 @@ class Player(Sprite):
 
 class Cage(Sprite):
     image = pygame.image.load('sprites/cage.png')
+    trap_image = pygame.image.load('sprites/trap.png')
 
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Cage.image, col, row, x, y, *groups)
@@ -148,14 +149,19 @@ class Cage(Sprite):
                 while alpha_channel != 0:
                     if timer % FPS == 0:
                         alpha_channel -= 1
-                        self.image.set_alpha(alpha_channel)
-                        trapped_character.image.set_alpha(alpha_channel)
+                        img = self.image.copy()
+                        img.set_alpha(alpha_channel)
+                        self.image = img
+                        img = trapped_character.image.copy()
+                        img.set_alpha(alpha_channel)
+                        trapped_character.image = img
                         self.level.all_sprites.draw(self.level.screen)
                         pygame.display.flip()
                     timer += 1
 
                 trapped_character.kill()
                 self.kill()
+                self.level.sprites_arr[trapped_character.row][trapped_character.col][1] = None
                 if trapped_character.__class__ == Mob:
                     self.level.player.coins += trapped_character.coins
 
@@ -219,7 +225,7 @@ class Mob(Sprite):
                     # далее моб будет идти к любой ловушке, чтобы осовободить проход к игроку
                     # при этом то, что большинство будет идти к одной клетке, поможет пробить оборону
                     self.target = list(filter(lambda x: x[1].__class__ == Cage,
-                                           self.level.sprites_arr))[0]
+                                              self.level.sprites_arr))[0]
                     # так как невозможность добраться до игрока связано с клеткой,
                     # то добраться до клетки можно всегда
                     cells = [self.voln(self.row,
@@ -238,7 +244,7 @@ class Mob(Sprite):
             block = self.level.sprites_arr[self.row][self.col][0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
-                self.level.game_over()
+                self.level.game_over = True
                 return
 
     def voln(self, x, y, x1, y1):
@@ -256,7 +262,7 @@ class Mob(Sprite):
         queue.append((x, y))
         self.get_to_all_neighbors(x, y, board, queue,
                                   [[False] * self.level.level_map.width
-        for _ in range(self.level.level_map.height)])
+                                   for _ in range(self.level.level_map.height)])
         end_cur = board[x1][y1][0]
         while end_cur != 0:
             # использем связный список, чтобы находить, откуда мы пришли в ячейку
@@ -270,8 +276,8 @@ class Mob(Sprite):
         # board - список, [расстояние от моба, (координаты предыдущей ячейки)]
         if board[row][col][0] == -1 or row == self.level.level_map.height - 1 and \
                 col == self.level.level_map.width - 1 or \
-                not(0 <= row < self.level.level_map.height - 1 and
-                    0 <= col < self.level.level_map.width):
+                not (0 <= row < self.level.level_map.height - 1 and
+                     0 <= col < self.level.level_map.width):
             return
         delta_x = [-1, 0, 0, 1]
         delta_y = [0, -1, 1, 0]
@@ -282,7 +288,7 @@ class Mob(Sprite):
                 if 0 <= delta_row + row < self.level.level_map.height and \
                         0 <= delta_col + col < self.level.level_map.width:
                     if board[row + delta_row][col + delta_col][0] > board[row][col][0] + 1 and \
-                        board[row + delta_row][col + delta_col][0] != -1:
+                            board[row + delta_row][col + delta_col][0] != -1:
                         # сохраняем предыдущую ячейку, вместе с расстоянием
                         board[row + delta_row][col + delta_col] = [board[row][col][0] + 1,
                                                                    (row, col)]

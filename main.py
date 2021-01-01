@@ -12,15 +12,14 @@ def game():
     # level_map и level просто подгружается, а если нет, то
     # создание карты по дефолту
     if msg == 'continue':
-        level_map, level = save.get_level_and_map()
+        level_map, level = save.get_level_and_map(screen)
     else:
         level_map = Map('map')
+        level_map.create_map()
         level_map.load_map()
         level = Level(level_map, screen)
         level.load_sprites()
 
-    level_map = Map('map')
-    level = Level(level_map, screen)
     running = True
     is_pressed_escape = False
 
@@ -28,7 +27,7 @@ def game():
         if level.game_over:
             game_over_res = game_over()
             if game_over_res == 'load_game':
-                level_map, level = save.get_level_and_map()
+                level_map, level = save.get_level_and_map(screen)
             if game_over_res == 'quit':
                 return 'quit'
             elif game_over_res == 'quit_to_menu':
@@ -43,7 +42,7 @@ def game():
             elif pause_res == 'continue':
                 is_pressed_escape = False
             elif pause_res == 'load_game':
-                level_map, level = save.get_level_and_map()
+                level_map, level = save.get_level_and_map(screen)
                 is_pressed_escape = False
 
         screen.fill('#282828')

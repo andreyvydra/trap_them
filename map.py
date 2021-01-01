@@ -12,8 +12,6 @@ class Map:
         self.path_map = path_map
 
         # не нужно указывать размеры поля, программа возьмёт его по размеру файла
-        self.create_map()
-        with open('map/map.txt') as map_for_init:
         with open(path_map + '/map.txt') as map_for_init:
             map_for_init = map_for_init.readlines()
             self.height = len(map_for_init)
@@ -95,7 +93,6 @@ class Level:
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
         self.y = CENTER_POINT[1] - (self.level_map.height - 1) * SCALED_CUBE_HEIGHT // 4
 
-
         # Дельта смещения для отрисовки каждого блока относительно соседних
         self.delta_x = SCALED_CUBE_WIDTH // 2
         self.delta_y = SCALED_TOP_RECT_HEIGHT // 2
@@ -115,13 +112,13 @@ class Level:
         # 2 - нормальный, ищет кратчайший путь, но просто так на ловушки не попадается
         self.difficulty = self.level_map.difficulty
 
-    def render(self, screen):
-        self.floor.draw(screen)
+    def render(self):
+        self.floor.draw(self.screen)
         if not self.game_over:
-            screen.blit(self.player.image, self.player.rect)
-        self.enemies.draw(screen)
-        self.coins.draw(screen)
-        self.cages.draw(screen)
+            self.screen.blit(self.player.image, self.player.rect)
+        self.enemies.draw(self.screen)
+        self.coins.draw(self.screen)
+        self.cages.draw(self.screen)
         self.render_number_of_coins()
         self.render_players_moves()
 
@@ -141,7 +138,8 @@ class Level:
                         cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
                                                                             self.player.row + row))
                         pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
-
+                    else:
+                        print(self.sprites_arr[self.player.row + row][self.player.col + col][1])
 
     def update(self, *args, **kwargs):
         if self.is_player_turn:
@@ -175,15 +173,14 @@ class Level:
             x, y = coin['x'], coin['y']
             coin = Coin(self, col, row, x, y,
                         self.all_sprites, self.coins)
-            self.sprites_arr[row][col][0] = coin
+            self.sprites_arr[row][col][1] = coin
 
     def load_cages(self, cages):
         for cage in cages:
             col, row = cage['col'], cage['row']
             x, y = cage['x'], cage['y']
-            current_cages = Cage(self, col, row, x, y,
-                                 self.all_sprites, self.floor)
-            self.sprites_arr[row][col][0] = current_cages
+            Cage(self, col, row, x, y,
+                 self.all_sprites, self.floor)
 
     def load_enemies(self, enemies):
         for enemy in enemies:

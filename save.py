@@ -13,10 +13,10 @@ class Save:
         with open('saves/save.pickle', 'rb') as file:
             return pickle.load(file)
 
-    def get_level_and_map(self):
+    def get_level_and_map(self, screen):
         player_data, level_data, map_data = self.get_data()
         level_map = Map(map_data)
-        level = Level(level_map)
+        level = Level(level_map, screen)
         level.load_data(level_data)
         level.load_player(player_data)
         return level_map, level
