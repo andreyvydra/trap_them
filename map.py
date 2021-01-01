@@ -1,17 +1,23 @@
-import pygame
+from itertools import repeat
+
 from settings import *
 from sprites import *
+from random import sample, randrange
 
 
 class Map:
-    def __init__(self, path_map):
+    def __init__(self, path_map, difficulty=1):
+
+        self.difficulty = difficulty
+        self.path_map = path_map
+
         # не нужно указывать размеры поля, программа возьмёт его по размеру файла
+        self.create_map()
         with open('map/map.txt') as map_for_init:
             map_for_init = map_for_init.readlines()
             self.height = len(map_for_init)
             self.width = len(map_for_init[0].split())
 
-        self.path_map = path_map
 
         self.first_layer = []
         self.second_layer = []
@@ -41,6 +47,37 @@ class Map:
                     row_list.append(int(table[row][col]))
                 self.second_layer.append(row_list)
 
+    def create_map(self):
+        self.width = randrange(5, 10)
+        self.height = randrange(5, 10)
+        if self.difficulty == 1:
+            num_characters = self.width * self.height // 5 + 1
+            num_coins = self.width * self.height // 10
+        else:
+            num_characters = self.width * self.height // 4 + 1
+            num_coins = self.width * self.height // 20
+        # матрица, где для каждой ячейки хранится row и col
+        matrix = [[0] * self.width for row in range(self.height)]
+        result = []
+        with open(self.path_map + '/map.txt', 'w') as current_file:
+            for row in range(self.height):
+                result.append(' '.join(str(i) for i in matrix[row]))
+            current_file.writelines('\n'.join(result))
+        characters = sample([(row, col) for row in range(self.height) for col in range(self.width)],
+                            num_characters)
+        coins = sample(characters, num_coins)
+        for characters_row, characters_col in characters:
+            matrix[characters_row][characters_col] = 2
+        for coin_row, coin_col in coins:
+            matrix[coin_row][coin_col] = 20
+        # последние координаты будут использоваться для задания координаты игрока
+        matrix[characters_row][characters_col] = 1
+        result = []
+        with open(self.path_map + '/characters.txt', 'w') as current_file:
+            for row in range(self.height):
+                result.append(' '.join(str(i) for i in matrix[row]))
+            current_file.writelines('\n'.join(result))
+
 
 class Level:
     def __init__(self, level_map, screen):
@@ -68,6 +105,10 @@ class Level:
 
         self.font = pygame.font.Font(None, 50)
 
+        # 1 - мирный, мобы просто идут на игрока,
+        # 2 - нормальный, ищет кратчайший путь, но просто так на ловушки не попадается
+        self.difficulty = self.level_map.difficulty
+
         self.load_sprites()
 
     def render(self):
@@ -80,16 +121,17 @@ class Level:
         self.screen.blit(text, (20, 20))
 
     def render_players_moves(self):
-        radius = 7
-        x = [-1, 0, 0, 1]
-        y = [0, -1, 1, 0]
-        for col, row in zip(x, y):
-            if 0 <= self.player.col + col < self.level_map.width and \
-                    0 <= self.player.row + row < self.level_map.height:
-                if not isinstance(self.sprites_arr[self.player.row + row][self.player.col + col][1], Mob):
-                    cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
-                                                                        self.player.row + row))
-                    pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
+        if self.player.alive():
+            radius = 7
+            x = [-1, 0, 0, 1]
+            y = [0, -1, 1, 0]
+            for col, row in zip(x, y):
+                if 0 <= self.player.col + col < self.level_map.width and \
+                        0 <= self.player.row + row < self.level_map.height:
+                    if not isinstance(self.sprites_arr[self.player.row + row][self.player.col + col][1], Mob):
+                        cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
+                                                                            self.player.row + row))
+                        pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
 
 
     def update(self, *args, **kwargs):
