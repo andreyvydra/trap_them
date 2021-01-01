@@ -115,9 +115,9 @@ class Level:
 
     def render(self):
         self.floor.draw(self.screen)
+        self.traps.draw(self.screen)
         if not self.game_over:
             self.screen.blit(self.player.image, self.player.rect)
-        self.traps.draw(self.screen)
         self.enemies.draw(self.screen)
         self.coins.draw(self.screen)
         self.cages.draw(self.screen)
@@ -147,12 +147,11 @@ class Level:
         else:
             self.enemies.update()
             self.cages.update()
+            self.traps.update()
             font = pygame.font.Font(None, 50)
             text = font.render("Your move!", True, (100, 255, 100))
             text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
             text_y = self.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
-            text_w = text.get_width()
-            text_h = text.get_height()
             self.screen.blit(text, (text_x, text_y))
             self.is_player_turn = True
             self.render()

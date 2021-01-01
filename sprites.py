@@ -93,8 +93,6 @@ class Player(Sprite):
                         text = font.render("Enemies' move!", True, (100, 255, 100))
                         text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
                         text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
-                        text_w = text.get_width()
-                        text_h = text.get_height()
                         self.level.screen.blit(text, (text_x, text_y))
                         self.level.render()
                         pygame.display.flip()
@@ -149,11 +147,12 @@ class Cage(Sprite):
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
-                self.image = Cage.trap_image.copy()
                 self.level.sprites_arr[self.row][self.col][1] = self
                 self.is_fallen = True
                 self.kill()
                 self.level.traps.add(self)
+                self.level.all_sprites.add(self)
+                self.image = Cage.trap_image.copy()
             self.rect.y += self.top_rect_height
 
         elif self.level.sprites_arr[self.row][self.col][1] and \
@@ -240,7 +239,6 @@ class Mob(Sprite):
 
                 cells = [(col, row)]
 
-
             self.level.sprites_arr[self.row][self.col][1] = None
             for cell in cells:
                 self.move(cell)
@@ -253,7 +251,6 @@ class Mob(Sprite):
                 self.level.game_over = True
                 return
 
-
     def voln(self, x, y, x1, y1):
         path = []
         board = []
@@ -261,8 +258,7 @@ class Mob(Sprite):
             board.append([])
             for col in range(self.level.level_map.width):
                 board[row].append([1000, (row, col)]
-                                  if self.level.sprites_arr[row][col][1].__class__ != Cage
-                                  else [-1, (row, col)])
+                                  if self.level.sprites_arr[row][col][1].__class__ != Cage else [-1, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
         queue = deque()
