@@ -135,7 +135,11 @@ class Level:
 
 
     def update(self, *args, **kwargs):
-        self.all_sprites.update(*args, **kwargs)
+        if self.is_player_turn:
+            self.all_sprites.update(*args, **kwargs)
+        else:
+            self.enemies.update()
+            self.is_player_turn = True
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте

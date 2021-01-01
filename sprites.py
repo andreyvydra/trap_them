@@ -240,7 +240,6 @@ class Mob(Sprite):
                     and block.row == self.level.player.row):
                 self.level.game_over()
                 return
-            self.level.is_player_turn = True
 
     def voln(self, x, y, x1, y1):
         path = []
