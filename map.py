@@ -68,14 +68,15 @@ class Level:
         self.coins = pygame.sprite.Group()
 
         self.is_player_turn = True
-
+        self.game_over = False
         self.player = None
 
         self.font = pygame.font.Font(None, 50)
 
     def render(self, screen):
         self.floor.draw(screen)
-        screen.blit(self.player.image, self.player.rect)
+        if not self.game_over:
+            screen.blit(self.player.image, self.player.rect)
         self.enemies.draw(screen)
         self.coins.draw(screen)
         self.cages.draw(screen)
@@ -118,6 +119,7 @@ class Level:
         x, y = data['x'], data['y']
         coins, steps = data['coins'], data['steps']
         self.player = Player(self, col, row, x, y, self.all_sprites, steps=steps, coins=coins)
+        self.sprites_arr[row][col][1] = self.player
 
     def load_coins(self, coins):
         for coin in coins:

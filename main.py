@@ -23,16 +23,24 @@ def game():
     is_pressed_escape = False
 
     while running:
+        if level.game_over:
+            game_over_res = game_over()
+            if game_over_res == 'load_game':
+                level_map, level = save.get_level_and_map()
+            if game_over_res == 'quit':
+                return 'quit'
+            elif game_over_res == 'quit_to_menu':
+                return
 
         if is_pressed_escape:
-            res = pause(level)
-            if res == 'quit':
+            pause_res = pause(level)
+            if pause_res == 'quit':
                 return 'quit'
-            elif res == 'quit_to_menu':
+            elif pause_res == 'quit_to_menu':
                 return
-            elif res == 'continue':
+            elif pause_res == 'continue':
                 is_pressed_escape = False
-            elif res == 'load_game':
+            elif pause_res == 'load_game':
                 level_map, level = save.get_level_and_map()
                 is_pressed_escape = False
 
@@ -98,6 +106,38 @@ def pause(level):
         pygame.display.flip()
 
 
+def game_over():
+    game_over_surface = pygame.surface.Surface(SCREEN_SIZE)
+    game_over_surface.set_alpha(100)
+    game_over_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    menu = Menu(game_over_manager, back_to_menu_btn=True,
+                quit_btn=True, load_btn=True)
+    running = True
+
+    while running:
+        game_over_surface.fill('#282828')
+        td = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 'quit'
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == menu.back_to_menu_btn:
+                        return 'quit_to_menu'
+                    if event.ui_element == menu.quit_btn:
+                        return 'quit'
+                    if event.ui_element == menu.load_btn:
+                        return 'load_game'
+
+            game_over_manager.process_events(event)
+
+        game_over_manager.update(td)
+        game_over_manager.draw_ui(game_over_surface)
+        screen.blit(game_over_surface, (0, 0))
+        pygame.display.flip()
+
+
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption("'КУБЫ!'")
@@ -115,7 +155,8 @@ if __name__ == '__main__':
         time_delta = clock.tick(FPS) / 1000.0
 
         if is_button_game_pressed:
-            if game() == 'quit':
+            res = game()
+            if res == 'quit':
                 pygame.quit()
                 break
 

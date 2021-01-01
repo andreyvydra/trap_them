@@ -133,12 +133,15 @@ class Cage(Sprite):
 
         else:
             trapped_character = self.level.sprites_arr[self.row][self.col][1]
-            if trapped_character and trapped_character:
+            print(trapped_character, self.level.sprites_arr[self.row][self.col])
+            if trapped_character:
                 # kill потом заменю на смену непрозрачности до 0, за определённое время
                 self.level.sprites_arr[self.row][self.col][1] = None
                 if trapped_character.__class__ == Mob:
                     self.level.player.coins += trapped_character.coins
                 trapped_character.kill()
+                if trapped_character.__class__ == Player:
+                    self.level.game_over = True
             self.kill()
         self.rect.y += self.top_rect_height
 
@@ -198,6 +201,9 @@ class Mob(Sprite):
             block = self.level.sprites_arr[row][col][0]
             self.move((block.col, block.row))
             self.level.is_player_turn = True
+
+        if self.level.player.col == self.col and self.level.player.row == self.row:
+            self.level.game_over = True
 
     def move(self, cell):
         self.change_col_and_row(cell)
