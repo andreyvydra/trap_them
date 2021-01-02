@@ -38,7 +38,7 @@ class Floor(Block):
 
 
 class Player(Sprite):
-    img = pygame.image.load('sprites/gg_sprite.png')
+    img = pygame.image.load('sprites/gg_sprites.png')
 
     def __init__(self, level, col, row, x, y, *groups, coins=5, steps=2, health=5):
         super().__init__(Player.img, col, row, x, y, *groups)
@@ -198,7 +198,7 @@ class Coin(Sprite):
 
 class Mob(Sprite):
     # пока как заглушка спрайт гг
-    img = pygame.image.load('sprites/gg_sprite.png')
+    img = pygame.image.load('sprites/mob.png')
 
     def __init__(self, level, col, row, x, y, *groups, coins=1, step=1, damage=1):
         super().__init__(Mob.img, col, row, x, y, *groups)
