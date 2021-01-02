@@ -216,9 +216,8 @@ class Level:
         for coin in coins:
             col, row = coin['col'], coin['row']
             x, y = coin['x'], coin['y']
-            coin = Coin(self, col, row, x, y,
+            Coin(self, col, row, x, y,
                         self.all_sprites, self.coins)
-            self.sprites_arr[row][col][1].append(coin)
 
     def load_cages(self, cages):
         for cage in cages:
