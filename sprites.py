@@ -75,8 +75,9 @@ class Player(Sprite):
                         # SECOND_LAYER не учитываем
                         if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
                                 isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
-                            self.level.sprites_arr[cell[1]][cell[0]][1] = self
-                            self.level.sprites_arr[self.row][self.col][1] = None
+                            self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
+                            self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                            [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                             self.move(cell)
                     elif args[0].button == 3:
                         # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
@@ -148,7 +149,6 @@ class Cage(Sprite):
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
-                self.level.sprites_arr[self.row][self.col][1] = self
                 self.is_fallen = True
                 self.kill()
                 self.level.traps.add(self)
@@ -156,11 +156,22 @@ class Cage(Sprite):
                 self.image = Cage.trap_image.copy()
             self.rect.y += self.top_rect_height
 
-        elif self.level.sprites_arr[self.row][self.col][1] and \
-                self.level.sprites_arr[self.row][self.col][1].__class__ != Cage:
+        elif self.level.sprites_arr[self.row][self.col][1]:
             self.image = Cage.image.copy()
-            trapped_character = self.level.sprites_arr[self.row][self.col][1]
-            if trapped_character and trapped_character.__class__ != Cage:
+            coins_in_this_cell = []
+            trapped_characters = self.level.sprites_arr[self.row][self.col][1]
+            # для проигрывания анимации нужно выбрать один из спрайтов
+            # все остальные просто убираются
+            character_for_animation = None
+            if trapped_characters:
+                for trapped_character in trapped_characters:
+                        if not character_for_animation:
+                            character_for_animation = trapped_character
+                            continue
+                        self.level.player.coins += character_for_animation.coins
+                        trapped_character.kill()
+                        if trapped_character.__class__ == Mob:
+                            self.level.player.coins += trapped_character.coins
                 timer = 0
                 alpha_channel = 255
 
@@ -169,17 +180,15 @@ class Cage(Sprite):
                         self.level.screen.fill('#282828')
                         alpha_channel -= 10
                         self.image.set_alpha(alpha_channel)
-                        trapped_character.image.set_alpha(alpha_channel)
+                        character_for_animation.image.set_alpha(alpha_channel)
                         self.level.render()
                         pygame.display.flip()
                     timer += 1
 
-                trapped_character.kill()
+                character_for_animation.kill()
                 self.kill()
-                self.level.sprites_arr[trapped_character.row][trapped_character.col][1] = None
-                if trapped_character.__class__ == Mob:
-                    self.level.player.coins += trapped_character.coins
-
+                row, col = character_for_animation.row, character_for_animation.col
+                self.level.sprites_arr[row][col][1] = [*coins_in_this_cell]
 
 class Coin(Sprite):
     image = pygame.image.load('sprites/coin.png')
@@ -241,12 +250,13 @@ class Mob(Sprite):
 
                 cells = [(col, row)]
 
-            self.level.sprites_arr[self.row][self.col][1] = None
+            self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                            [character for character in self.level.sprites_arr[self.row][self.col][1]]))
             for cell in cells:
                 self.move(cell)
 
             # в этом случае SECOND_LAYER не нужно учитывать
-            self.level.sprites_arr[self.row][self.col][1] = self
+            self.level.sprites_arr[self.row][self.col][1].append(self)
             block = self.level.sprites_arr[self.row][self.col][0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
@@ -254,6 +264,8 @@ class Mob(Sprite):
                 if self.level.player.health == 0:
                     self.level.game_over = True
                 self.kill()
+                self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                        [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                 return
 
     def voln(self, x, y, x1, y1):
@@ -262,8 +274,9 @@ class Mob(Sprite):
         for row in range(self.level.level_map.height):
             board.append([])
             for col in range(self.level.level_map.width):
-                board[row].append([1000, (row, col)]
-                                  if self.level.sprites_arr[row][col][1].__class__ != Cage else [-1, (row, col)])
+                board[row].append([-1, (row, col)] if self.level.sprites_arr[row][col][1] and
+                    self.level.sprites_arr[row][col][1].__class__ == Cage else
+                    [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
         queue = deque()
