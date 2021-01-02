@@ -40,7 +40,7 @@ class Floor(Block):
 class Player(Sprite):
     img = pygame.image.load('sprites/gg_sprite.png')
 
-    def __init__(self, level, col, row, x, y, *groups, coins=5, steps=2):
+    def __init__(self, level, col, row, x, y, *groups, coins=5, steps=2, health=5):
         super().__init__(Player.img, col, row, x, y, *groups)
         self.level = level
         # col_drawing используется, как переменная для отрисовки
@@ -49,6 +49,7 @@ class Player(Sprite):
         self.coins = coins
         self.steps = steps
         self.flag = True
+        self.health = health
 
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
@@ -199,13 +200,14 @@ class Mob(Sprite):
     # пока как заглушка спрайт гг
     img = pygame.image.load('sprites/gg_sprite.png')
 
-    def __init__(self, level, col, row, x, y, *groups, coins=1, step=1):
+    def __init__(self, level, col, row, x, y, *groups, coins=1, step=1, damage=1):
         super().__init__(Mob.img, col, row, x, y, *groups)
         self.flag = False
         self.level = level
         # col_drawing используется, как переменная для отрисовки
         self.drawing_col = col
         self.drawing_row = row
+        self.damage = damage
 
         # self.coins отвечает за вознаграждение за поимку
         self.coins = coins
@@ -248,7 +250,10 @@ class Mob(Sprite):
             block = self.level.sprites_arr[self.row][self.col][0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
-                self.level.game_over = True
+                self.level.player.health = max(self.level.player.health - self.damage, 0)
+                if self.level.player.health == 0:
+                    self.level.game_over = True
+                self.kill()
                 return
 
     def voln(self, x, y, x1, y1):
@@ -308,3 +313,12 @@ class Mob(Sprite):
         self.row = cell[1]
         self.drawing_col = self.col + SECOND_LAYER
         self.drawing_row = self.row + SECOND_LAYER
+
+
+class Heart(pygame.sprite.Sprite):
+    image = pygame.image.load('sprites/heart.png')
+
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.image = Heart.image
+        self.rect = self.image.get_rect()
