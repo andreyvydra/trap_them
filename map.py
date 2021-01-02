@@ -103,6 +103,7 @@ class Level:
         self.cages = pygame.sprite.Group()
         self.coins = pygame.sprite.Group()
         self.traps = pygame.sprite.Group()
+        self.hearts = pygame.sprite.Group()
 
         self.is_player_turn = True
         self.game_over = False
@@ -123,10 +124,19 @@ class Level:
         self.cages.draw(self.screen)
         self.render_number_of_coins()
         self.render_players_moves()
+        self.render_health()
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
         self.screen.blit(text, (20, 20))
+
+    def render_health(self):
+        self.hearts = pygame.sprite.Group()
+        for col in range(1, self.player.health + 1):
+            cur_sprite = Heart(self.hearts)
+            cur_sprite.rect.y = MARGIN_TOP_HEART
+            cur_sprite.rect.x = SCREEN_WIDTH - col * cur_sprite.image.get_width() - MATGIN_RIGHT_HEART * col
+        self.hearts.draw(self.screen)
 
     def render_players_moves(self):
         if self.player.alive():
