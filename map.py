@@ -86,7 +86,7 @@ class Map:
 class Level:
     def __init__(self, level_map, screen):
         self.level_map = level_map
-        self.sprites_arr = [[[None, None] for _ in range(self.level_map.width)]
+        self.sprites_arr = [[[None, []] for _ in range(self.level_map.width)]
                             for _ in range(self.level_map.height)]
         self.screen = screen
 
@@ -160,12 +160,31 @@ class Level:
                                                                             self.player.row + row))
                         pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
 
+    def render_num_characters(self):
+        for row in range(self.level_map.height):
+            for col in range(self.level_map.width):
+                if len(self.sprites_arr[row][col][1]) > 1:
+                    if self.sprites_arr[row][col][1][0].__class__ == Cage:
+                        num = len(self.sprites_arr[row][col][1]) - 1
+                    else:
+                        num = len(self.sprites_arr[row][col][1])
+                    if num > 1:
+                        x, y = self.get_cords_for_block((col, row))
+                        font = pygame.font.Font(None, 20)
+                        text = font.render(f"{num}", True, (255, 255, 255))
+                        text_w = text.get_width()
+                        text_h = text.get_height()
+                        text_x = x + SCALED_TOP_RECT_WIDTH // 2 - text_w // 2
+                        text_y = y - SCALED_TOP_RECT_HEIGHT + text_h
+                        pygame.draw.rect(self.screen, ('#282828'), (text_x - 5, text_y - 2,
+                                                                    text_w + 10, text_h + 5))
+                        pygame.draw.rect(self.screen, ('white'), (text_x - 5, text_y - 2,
+                                                                    text_w + 10, text_h + 5), 1)
+                        self.screen.blit(text, (text_x, text_y))
+
+
     def update(self, *args, **kwargs):
         if self.is_player_turn:
-            s = 0
-            for sprite in self.all_sprites:
-                s += 1 if sprite.__class__ == Player else 0
-            print(s)
             self.all_sprites.update(*args, **kwargs)
         else:
             self.enemies.update()
@@ -204,13 +223,13 @@ class Level:
         x, y = data['x'], data['y']
         coins, steps = data['coins'], data['steps']
         self.player = Player(self, col, row, x, y, self.all_sprites, steps=steps, coins=coins)
-        self.sprites_arr[row][col][1] = self.player
+        self.sprites_arr[row][col][1].append(self.player)
 
     def load_coins(self, coins):
         for coin in coins:
             col, row = coin['col'], coin['row']
             x, y = coin['x'], coin['y']
-            coin = Coin(self, col, row, x, y,
+            Coin(self, col, row, x, y,
                         self.all_sprites, self.coins)
             self.sprites_arr[row][col][1] = coin
 
@@ -228,7 +247,7 @@ class Level:
             coins, step = enemy['coins'], enemy['step']
             new_mob = Mob(self, col, row, x, y,
                           self.all_sprites, self.enemies, coins=coins, step=step)
-            self.sprites_arr[row][col][1] = new_mob
+            self.sprites_arr[row][col][1].append(new_mob)
 
     def load_floor(self, floor):
         for block in floor:
@@ -254,12 +273,12 @@ class Level:
                     x, y = self.get_cords_for_player((current_col, current_row))
                     if sprite_num == 1:
                         self.player = Player(self, col, row, x, y, self.all_sprites)
-                        self.sprites_arr[row][col][1] = self.player
+                        self.sprites_arr[row][col][1].append(self.player)
 
                     elif sprite_num == 2:
                         new_mob = Mob(self, col, row, x, y, self.all_sprites, self.enemies)
 
-                        self.sprites_arr[row][col][1] = new_mob
+                        self.sprites_arr[row][col][1].append(new_mob)
                     elif sprite_num == 20:
                         Coin(self, col, row, x, y, self.all_sprites, self.coins)
 
