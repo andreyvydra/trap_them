@@ -69,6 +69,8 @@ class Player(Sprite):
         self.drawing_row = self.row + SECOND_LAYER
 
     def update(self, *args, **kwargs):
+        if self.steps == 0:
+            self.selected = False
         if self.level.is_player_turn:
             if args and args[0].type == pygame.MOUSEBUTTONDOWN:
                 if self.steps != 0:

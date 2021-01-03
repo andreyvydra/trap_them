@@ -131,8 +131,8 @@ class Level:
     def render_mp(self):
         for i in range(self.player.max_steps):
             if i + 1 <= self.player.steps:
-                pygame.draw.rect(self.screen, (15, 82, 186), (20 + (i * 60 + 1), 60, 60, 25))
-            pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60 + 1), 60, 60, 25), 2)
+                pygame.draw.rect(self.screen, (15, 82, 186), (20 + (i * 60), 50, 60, 25))
+            pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 50, 60, 25), 2)
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
@@ -149,7 +149,6 @@ class Level:
 
     def render_players_moves(self):
         if self.player.alive() and self.player.selected:
-            print(1)
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
