@@ -50,7 +50,7 @@ class Player(Sprite):
         self.steps = steps
         self.flag = True
         self.health = health
-
+        self.max_health = health
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
         self.call_down = 100
@@ -313,12 +313,3 @@ class Mob(Sprite):
         self.row = cell[1]
         self.drawing_col = self.col + SECOND_LAYER
         self.drawing_row = self.row + SECOND_LAYER
-
-
-class Heart(pygame.sprite.Sprite):
-    image = pygame.image.load('sprites/heart.png')
-
-    def __init__(self, *groups):
-        super().__init__(*groups)
-        self.image = Heart.image
-        self.rect = self.image.get_rect()

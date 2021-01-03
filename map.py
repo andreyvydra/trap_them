@@ -128,15 +128,16 @@ class Level:
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
-        self.screen.blit(text, (20, 20))
+        text_w = text.get_width()
+        text_x = SCREEN_WIDTH - text_w - 20
+        text_y = 20
+        self.screen.blit(text, (text_x, text_y))
 
     def render_health(self):
-        self.hearts = pygame.sprite.Group()
-        for col in range(1, self.player.health + 1):
-            cur_sprite = Heart(self.hearts)
-            cur_sprite.rect.y = MARGIN_TOP_HEART
-            cur_sprite.rect.x = SCREEN_WIDTH - col * cur_sprite.image.get_width() - MATGIN_RIGHT_HEART * col
-        self.hearts.draw(self.screen)
+        for i in range(self.player.max_health):
+            if i + 1 <= self.player.health:
+                pygame.draw.rect(self.screen, (98, 212, 77), (20 + (i * 60), 20, 60, 25))
+            pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 20, 60, 25), 2)
 
     def render_players_moves(self):
         if self.player.alive():
