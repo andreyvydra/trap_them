@@ -156,19 +156,23 @@ class Level:
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 if len(self.sprites_arr[row][col][1]) > 1:
-                    num = len(self.sprites_arr[row][col][1])
-                    x, y = self.get_cords_for_block((col, row))
-                    font = pygame.font.Font(None, 20)
-                    text = font.render(f"{num}", True, (255, 255, 255))
-                    text_w = text.get_width()
-                    text_h = text.get_height()
-                    text_x = x + SCALED_TOP_RECT_WIDTH // 2 - text_w // 2
-                    text_y = y - SCALED_TOP_RECT_HEIGHT + text_h
-                    pygame.draw.rect(self.screen, ('#282828'), (text_x - 5, text_y - 2,
-                                                                text_w + 10, text_h + 5))
-                    pygame.draw.rect(self.screen, ('white'), (text_x - 5, text_y - 2,
-                                                                text_w + 10, text_h + 5), 1)
-                    self.screen.blit(text, (text_x, text_y))
+                    if self.sprites_arr[row][col][1][0].__class__ == Cage:
+                        num = len(self.sprites_arr[row][col][1]) - 1
+                    else:
+                        num = len(self.sprites_arr[row][col][1])
+                    if num > 1:
+                        x, y = self.get_cords_for_block((col, row))
+                        font = pygame.font.Font(None, 20)
+                        text = font.render(f"{num}", True, (255, 255, 255))
+                        text_w = text.get_width()
+                        text_h = text.get_height()
+                        text_x = x + SCALED_TOP_RECT_WIDTH // 2 - text_w // 2
+                        text_y = y - SCALED_TOP_RECT_HEIGHT + text_h
+                        pygame.draw.rect(self.screen, ('#282828'), (text_x - 5, text_y - 2,
+                                                                    text_w + 10, text_h + 5))
+                        pygame.draw.rect(self.screen, ('white'), (text_x - 5, text_y - 2,
+                                                                    text_w + 10, text_h + 5), 1)
+                        self.screen.blit(text, (text_x, text_y))
 
 
     def update(self, *args, **kwargs):

@@ -145,7 +145,6 @@ class Cage(Sprite):
                 if self.rect.colliderect(floor.rect):
                     self.rect.y -= self.velocity // FPS
                     self.is_fallen = True
-
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
@@ -154,23 +153,26 @@ class Cage(Sprite):
                 self.level.traps.add(self)
                 self.level.all_sprites.add(self)
                 self.image = Cage.trap_image.copy()
+                self.level.sprites_arr[self.row][self.col][1].append(self)
             self.rect.y += self.top_rect_height
 
-        elif self.level.sprites_arr[self.row][self.col][1]:
+        elif self.level.sprites_arr[self.row][self.col][1] and \
+                (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
+                len(self.level.sprites_arr[self.row][self.col][1]) > 1):
             self.image = Cage.image.copy()
-            coins_in_this_cell = []
             trapped_characters = self.level.sprites_arr[self.row][self.col][1]
             # для проигрывания анимации нужно выбрать один из спрайтов
             # все остальные просто убираются
             character_for_animation = None
             if trapped_characters:
                 for trapped_character in trapped_characters:
+                    if not isinstance(trapped_character, Cage):
                         if not character_for_animation:
                             character_for_animation = trapped_character
+                            self.level.player.coins += character_for_animation.coins
                             continue
-                        self.level.player.coins += character_for_animation.coins
                         trapped_character.kill()
-                        if trapped_character.__class__ == Mob:
+                        if isinstance(trapped_character, Mob):
                             self.level.player.coins += trapped_character.coins
                 timer = 0
                 alpha_channel = 255
@@ -188,7 +190,7 @@ class Cage(Sprite):
                 character_for_animation.kill()
                 self.kill()
                 row, col = character_for_animation.row, character_for_animation.col
-                self.level.sprites_arr[row][col][1] = [*coins_in_this_cell]
+                self.level.sprites_arr[row][col][1] = []
 
 class Coin(Sprite):
     image = pygame.image.load('sprites/coin.png')
@@ -275,7 +277,7 @@ class Mob(Sprite):
             board.append([])
             for col in range(self.level.level_map.width):
                 board[row].append([-1, (row, col)] if self.level.sprites_arr[row][col][1] and
-                    self.level.sprites_arr[row][col][1].__class__ == Cage else
+                    self.level.sprites_arr[row][col][1][0].__class__ == Cage else
                     [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
