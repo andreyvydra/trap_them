@@ -65,6 +65,9 @@ class Save:
     def get_player_data(self, level):
         player_data = {'coins': level.player.coins,
                        'steps': level.player.steps,
+                       'health': level.player.health,
+                       'max_health': level.player.max_health,
+                       'max_steps': level.player.max_steps,
                        'col': level.player.col,
                        'row': level.player.row,
                        'x': level.player.rect.x,
