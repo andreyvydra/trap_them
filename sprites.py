@@ -48,6 +48,7 @@ class Player(Sprite):
         self.drawing_row = row + SECOND_LAYER
         self.coins = coins
         self.steps = steps
+        self.max_steps = steps
         self.flag = True
         self.health = health
 
@@ -69,40 +70,44 @@ class Player(Sprite):
     def update(self, *args, **kwargs):
         if self.level.is_player_turn:
             if args and args[0].type == pygame.MOUSEBUTTONDOWN:
-                if self.last_click > self.call_down:
-                    if args[0].button == 1:
-                        cell = self.level.get_cell_for_first_layer(args[0].pos)
-                        # SECOND_LAYER не учитываем
-                        if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
-                                isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
-                            self.level.sprites_arr[cell[1]][cell[0]][1] = self
-                            self.level.sprites_arr[self.row][self.col][1] = None
-                            self.move(cell)
-                    elif args[0].button == 3:
-                        # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
-                        cell = self.level.get_cell_for_first_layer(args[0].pos)
-                        if cell is not None:
-                            staring_cell = cell[0] - 4, cell[1] - 4
-                            if cell is not None and self.coins > 0:
-                                self.coins -= 1
-                                Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
-                                     self.level.all_sprites, self.level.cages)
-                    # на колёсико мыши конец хода игрока
-                    if args[0].button == 2:
-                        self.level.is_player_turn = False
-                        font = pygame.font.Font(None, 50)
-                        text = font.render("Enemies' move!", True, (100, 255, 100))
-                        text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                        text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
-                        self.level.screen.blit(text, (text_x, text_y))
-                        self.level.render()
-                        pygame.display.flip()
-                        ping_for_message = 10000000
-                        while ping_for_message != 0:
-                            ping_for_message -= 1
+                if self.steps != 0:
+                    if self.last_click > self.call_down:
+                        if args[0].button == 1:
+                            cell = self.level.get_cell_for_first_layer(args[0].pos)
+                            # SECOND_LAYER не учитываем
+                            if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
+                                    isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
+                                self.level.sprites_arr[cell[1]][cell[0]][1] = self
+                                self.level.sprites_arr[self.row][self.col][1] = None
+                                self.steps -= 1
+                                self.move(cell)
+                        elif args[0].button == 3:
+                            # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
+                            cell = self.level.get_cell_for_first_layer(args[0].pos)
+                            if cell is not None:
+                                staring_cell = cell[0] - 4, cell[1] - 4
+                                if cell is not None and self.coins > 0:
+                                    self.coins -= 1
+                                    self.steps -= 1
+                                    Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
+                                         self.level.all_sprites, self.level.cages)
 
-                        self.level.screen.fill('#282828')
-                    self.last_click = 0
+                # на колёсико мыши конец хода игрока
+                if args[0].button == 2:
+                    self.level.is_player_turn = False
+                    font = pygame.font.Font(None, 50)
+                    text = font.render("Enemies' move!", True, (100, 255, 100))
+                    text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                    text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
+                    self.level.screen.blit(text, (text_x, text_y))
+                    self.level.render()
+                    pygame.display.flip()
+                    ping_for_message = 10000000
+                    while ping_for_message != 0:
+                        ping_for_message -= 1
+
+                    self.level.screen.fill('#282828')
+                self.last_click = 0
             else:
                 self.last_click += 1000 // FPS
 
