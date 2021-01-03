@@ -54,6 +54,7 @@ class Player(Sprite):
         self.selected = False
         self.health = health
         self.max_health = max_health
+        self.abilities = []
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
         self.call_down = 200
@@ -191,6 +192,7 @@ class Cage(Sprite):
                         trapped_character.kill()
                         if isinstance(trapped_character, Mob):
                             self.level.player.coins += trapped_character.coins
+                            self.level.level_map.num_characters -= 1
 
                 timer = 0
                 alpha_channel = 255
@@ -205,6 +207,8 @@ class Cage(Sprite):
                     timer += 1
                 character_for_animation.kill()
                 self.kill()
+                if isinstance(character_for_animation, Mob):
+                    self.level.level_map.num_characters -= 1
                 row, col = character_for_animation.row, character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
 
@@ -286,6 +290,7 @@ class Mob(Sprite):
                 if self.level.player.health == 0:
                     self.level.game_over = True
                 self.kill()
+                self.level.level_map.num_characters -= 1
                 self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
                         [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                 return
