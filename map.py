@@ -117,12 +117,15 @@ class Level:
 
     def render(self):
         self.floor.draw(self.screen)
+        self.coins.draw(self.screen)
         self.traps.draw(self.screen)
+
         if not self.game_over:
             self.screen.blit(self.player.image, self.player.rect)
+
         self.enemies.draw(self.screen)
-        self.coins.draw(self.screen)
         self.cages.draw(self.screen)
+
         self.render_number_of_coins()
         self.render_players_moves()
         self.render_health()
@@ -180,9 +183,8 @@ class Level:
                         pygame.draw.rect(self.screen, ('#282828'), (text_x - 5, text_y - 2,
                                                                     text_w + 10, text_h + 5))
                         pygame.draw.rect(self.screen, ('white'), (text_x - 5, text_y - 2,
-                                                                    text_w + 10, text_h + 5), 1)
+                                                                  text_w + 10, text_h + 5), 1)
                         self.screen.blit(text, (text_x, text_y))
-
 
     def update(self, *args, **kwargs):
         if self.is_player_turn:
@@ -236,7 +238,7 @@ class Level:
             col, row = coin['col'], coin['row']
             x, y = coin['x'], coin['y']
             Coin(self, col, row, x, y,
-                        self.all_sprites, self.coins)
+                 self.all_sprites, self.coins)
 
     def load_cages(self, cages):
         for cage in cages:
@@ -285,6 +287,9 @@ class Level:
 
                         self.sprites_arr[row][col][1].append(new_mob)
                     elif sprite_num == 20:
+                        x, y = self.get_cords_for_block((col + SECOND_LAYER, row + SECOND_LAYER))
+                        x += (SCALED_CUBE_WIDTH - Coin.image.get_width()) // 2
+                        y += (SCALED_CUBE_HEIGHT - Coin.image.get_height()) - SCALED_TOP_RECT_HEIGHT // 2
                         Coin(self, col, row, x, y, self.all_sprites, self.coins)
 
     def get_cords_for_movement_circles(self, cell):

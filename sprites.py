@@ -222,6 +222,9 @@ class Coin(Sprite):
         if self.level.player.col == self.col and self.level.player.row == self.row:
             self.level.player.coins += 1
             self.kill()
+        for enemy in self.level.enemies:
+            if enemy.col == self.col and enemy.row == self.row:
+                self.kill()
 
 
 class Mob(Sprite):
