@@ -81,11 +81,15 @@ class Player(Sprite):
                             if cell is not None and cell[0] == self.col and cell[1] == self.row:
                                 self.selected = not self.selected
                             else:
+                                mobs_count = len(list(filter(lambda x: isinstance(x, Mob),
+                                                             self.level.sprites_arr[cell[1]][cell[0]][1])))
                                 # SECOND_LAYER не учитываем
-                                if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
-                                        isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob) and self.selected:
+                                if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and \
+                                        mobs_count == 0:
                                     self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
-                                    self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self, [character for character in self.level.sprites_arr[self.row][self.col][1]]))
+                                    self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                                                          [character for character in
+                                                        self.level.sprites_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
                         elif args[0].button == 3 and not self.selected:
@@ -160,7 +164,6 @@ class Cage(Sprite):
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
-                self.level.sprites_arr[self.row][self.col][1] = self
                 self.is_fallen = True
                 self.kill()
                 self.level.traps.add(self)
@@ -169,9 +172,10 @@ class Cage(Sprite):
                 self.level.sprites_arr[self.row][self.col][1].append(self)
             self.rect.y += self.top_rect_height
 
+
         elif self.level.sprites_arr[self.row][self.col][1] and \
                 (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
-                len(self.level.sprites_arr[self.row][self.col][1]) > 1):
+                 len(self.level.sprites_arr[self.row][self.col][1]) > 1):
             self.image = Cage.image.copy()
             trapped_characters = self.level.sprites_arr[self.row][self.col][1]
             # для проигрывания анимации нужно выбрать один из спрайтов
@@ -187,9 +191,9 @@ class Cage(Sprite):
                         trapped_character.kill()
                         if isinstance(trapped_character, Mob):
                             self.level.player.coins += trapped_character.coins
+
                 timer = 0
                 alpha_channel = 255
-
                 while alpha_channel > 0:
                     if timer % FPS == 0:
                         self.level.screen.fill('#282828')
@@ -199,7 +203,6 @@ class Cage(Sprite):
                         self.level.render()
                         pygame.display.flip()
                     timer += 1
-
                 character_for_animation.kill()
                 self.kill()
                 row, col = character_for_animation.row, character_for_animation.col
@@ -291,7 +294,7 @@ class Mob(Sprite):
             board.append([])
             for col in range(self.level.level_map.width):
                 board[row].append([-1, (row, col)] if self.level.sprites_arr[row][col][1] and
-                    self.level.sprites_arr[row][col][1][0].__class__ == Cage else
+                    isinstance(self.level.sprites_arr[row][col][1][0], Cage) else
                     [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]

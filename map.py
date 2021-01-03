@@ -126,6 +126,7 @@ class Level:
         self.render_number_of_coins()
         self.render_players_moves()
         self.render_health()
+        self.render_num_characters()
         self.render_mp()
 
     def render_mp(self):
