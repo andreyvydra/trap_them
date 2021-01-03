@@ -165,7 +165,6 @@ class Level:
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 if len(self.sprites_arr[row][col][1]) > 1:
-                    print(self.sprites_arr[row][col])
                     if self.sprites_arr[row][col][1][0].__class__ == Cage:
                         num = len(self.sprites_arr[row][col][1]) - 1
                     else:
@@ -236,9 +235,8 @@ class Level:
         for coin in coins:
             col, row = coin['col'], coin['row']
             x, y = coin['x'], coin['y']
-            coin = Coin(self, col, row, x, y,
+            Coin(self, col, row, x, y,
                         self.all_sprites, self.coins)
-            self.sprites_arr[row][col][1].append(coin)
 
     def load_cages(self, cages):
         for cage in cages:
