@@ -3,6 +3,7 @@ from itertools import repeat
 from settings import *
 from sprites import *
 from random import sample, randrange
+import pygame
 
 
 class Map:
@@ -125,6 +126,13 @@ class Level:
         self.render_number_of_coins()
         self.render_players_moves()
         self.render_health()
+        self.render_mp()
+
+    def render_mp(self):
+        for i in range(self.player.max_steps):
+            if i + 1 <= self.player.steps:
+                pygame.draw.rect(self.screen, (15, 82, 186), (20 + (i * 60 + 1), 60, 60, 25))
+            pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60 + 1), 60, 60, 25), 2)
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
@@ -140,7 +148,8 @@ class Level:
             pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 20, 60, 25), 2)
 
     def render_players_moves(self):
-        if self.player.alive():
+        if self.player.alive() and self.player.selected:
+            print(1)
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
@@ -154,6 +163,10 @@ class Level:
 
     def update(self, *args, **kwargs):
         if self.is_player_turn:
+            s = 0
+            for sprite in self.all_sprites:
+                s += 1 if sprite.__class__ == Player else 0
+            print(s)
             self.all_sprites.update(*args, **kwargs)
         else:
             self.enemies.update()
@@ -173,6 +186,7 @@ class Level:
 
             self.screen.fill('#282828')
             self.is_player_turn = True
+            self.player.steps = self.player.max_steps
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
