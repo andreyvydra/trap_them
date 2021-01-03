@@ -80,12 +80,12 @@ class Player(Sprite):
                             cell = self.level.get_cell_for_first_layer(args[0].pos)
                             if cell is not None and cell[0] == self.col and cell[1] == self.row:
                                 self.selected = not self.selected
-                            else:
+                            elif cell is not None:
                                 mobs_count = len(list(filter(lambda x: isinstance(x, Mob),
                                                              self.level.sprites_arr[cell[1]][cell[0]][1])))
                                 # SECOND_LAYER не учитываем
                                 if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and \
-                                        mobs_count == 0:
+                                        mobs_count == 0 and self.selected:
                                     self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
                                     self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
                                                           [character for character in

@@ -156,7 +156,7 @@ class Level:
             for col, row in zip(x, y):
                 if 0 <= self.player.col + col < self.level_map.width and \
                         0 <= self.player.row + row < self.level_map.height:
-                    if not isinstance(self.sprites_arr[self.player.row + row][self.player.col + col][1], Mob):
+                    if len(self.sprites_arr[self.player.row + row][self.player.col + col][1]) == 0:
                         cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
                                                                             self.player.row + row))
                         pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
@@ -165,6 +165,7 @@ class Level:
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 if len(self.sprites_arr[row][col][1]) > 1:
+                    print(self.sprites_arr[row][col])
                     if self.sprites_arr[row][col][1][0].__class__ == Cage:
                         num = len(self.sprites_arr[row][col][1]) - 1
                     else:
@@ -235,9 +236,9 @@ class Level:
         for coin in coins:
             col, row = coin['col'], coin['row']
             x, y = coin['x'], coin['y']
-            Coin(self, col, row, x, y,
+            coin = Coin(self, col, row, x, y,
                         self.all_sprites, self.coins)
-            self.sprites_arr[row][col][1] = coin
+            self.sprites_arr[row][col][1].append(coin)
 
     def load_cages(self, cages):
         for cage in cages:
