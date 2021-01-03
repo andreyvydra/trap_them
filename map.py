@@ -222,7 +222,12 @@ class Level:
         col, row = data['col'], data['row']
         x, y = data['x'], data['y']
         coins, steps = data['coins'], data['steps']
-        self.player = Player(self, col, row, x, y, self.all_sprites, steps=steps, coins=coins)
+        max_steps = data['max_steps']
+        health, max_health = data['health'], data['max_health']
+        self.player = Player(self, col, row, x, y,
+                             self.all_sprites, steps=steps,
+                             coins=coins, health=health,
+                             max_health=max_health, max_steps=max_steps)
         self.sprites_arr[row][col][1].append(self.player)
 
     def load_coins(self, coins):

@@ -40,7 +40,8 @@ class Floor(Block):
 class Player(Sprite):
     img = pygame.image.load('sprites/gg_sprites.png')
 
-    def __init__(self, level, col, row, x, y, *groups, coins=5, steps=2, health=5):
+    def __init__(self, level, col, row, x, y, *groups,
+                 coins=5, steps=2, health=5, max_health=5, max_steps=2):
         super().__init__(Player.img, col, row, x, y, *groups)
         self.level = level
         # col_drawing используется, как переменная для отрисовки
@@ -48,11 +49,11 @@ class Player(Sprite):
         self.drawing_row = row + SECOND_LAYER
         self.coins = coins
         self.steps = steps
-        self.max_steps = steps
+        self.max_steps = max_steps
         self.flag = True
         self.selected = False
         self.health = health
-        self.max_health = health
+        self.max_health = max_health
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
         self.call_down = 200
@@ -203,6 +204,7 @@ class Cage(Sprite):
                 self.kill()
                 row, col = character_for_animation.row, character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
+
 
 class Coin(Sprite):
     image = pygame.image.load('sprites/coin.png')
