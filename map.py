@@ -147,7 +147,8 @@ class Level:
         self.hearts.draw(self.screen)
 
     def render_players_moves(self):
-        if self.player.alive():
+        if self.player.alive() and self.player.selected:
+            print(1)
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
@@ -161,6 +162,10 @@ class Level:
 
     def update(self, *args, **kwargs):
         if self.is_player_turn:
+            s = 0
+            for sprite in self.all_sprites:
+                s += 1 if sprite.__class__ == Player else 0
+            print(s)
             self.all_sprites.update(*args, **kwargs)
         else:
             self.enemies.update()

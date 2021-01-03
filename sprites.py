@@ -50,11 +50,12 @@ class Player(Sprite):
         self.steps = steps
         self.max_steps = steps
         self.flag = True
+        self.selected = False
         self.health = health
 
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
-        self.call_down = 100
+        self.call_down = 200
         self.last_click = 0
 
     def change_cords(self, x, y):
@@ -74,14 +75,17 @@ class Player(Sprite):
                     if self.last_click > self.call_down:
                         if args[0].button == 1:
                             cell = self.level.get_cell_for_first_layer(args[0].pos)
-                            # SECOND_LAYER не учитываем
-                            if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
-                                    isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
-                                self.level.sprites_arr[cell[1]][cell[0]][1] = self
-                                self.level.sprites_arr[self.row][self.col][1] = None
-                                self.steps -= 1
-                                self.move(cell)
-                        elif args[0].button == 3:
+                            if cell is not None and cell[0] == self.col and cell[1] == self.row:
+                                self.selected = not self.selected
+                            else:
+                                # SECOND_LAYER не учитываем
+                                if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
+                                        isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob) and self.selected:
+                                    self.level.sprites_arr[cell[1]][cell[0]][1] = self
+                                    self.level.sprites_arr[self.row][self.col][1] = None
+                                    self.steps -= 1
+                                    self.move(cell)
+                        elif args[0].button == 3 and not self.selected:
                             # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
                             cell = self.level.get_cell_for_first_layer(args[0].pos)
                             if cell is not None:
