@@ -97,9 +97,6 @@ class UpgradeMenu:
         self.first_upg_btn = None
         self.second_upg_btn = None
         self.third_upg_btn = None
-        self.back_to_menu_btn = None
-        self.save_btn = None
-        self.quit_btn = None
         self.first_upg_image = None
         self.second_upg_image = None
         self.third_upg_image = None
@@ -108,20 +105,12 @@ class UpgradeMenu:
             self.add_first_upg_btn()
         if second_upg_btn:
             self.add_second_upg_btn()
-        if save_btn:
-            self.add_save_btn()
         if third_upg_btn:
             self.add_third_upg_btn()
-        if back_to_menu_btn:
-            self.add_back_to_menu_btn()
-        if quit_btn:
-            self.add_quit_btn()
 
         self.buttons = [self.first_upg_btn, self.second_upg_btn,
-                        self.third_upg_btn, self.back_to_menu_btn,
-                        self.quit_btn]
+                        self.third_upg_btn]
 
-        self.set_coordinates_for_buttons()
         self.set_coordinates_for_upg_btns()
         self.set_coordinates_for_upg_images()
 
@@ -139,15 +128,6 @@ class UpgradeMenu:
         for i, btn in enumerate(active_buttons):
             btn.rect.x = CENTER_POINT[0] - x + i * BUTTON_SIZE[0]
             btn.rect.y = CENTER_POINT[1] + MARGIN_TOP_BUTTON
-            btn.rebuild()
-
-    def set_coordinates_for_buttons(self):
-        active_buttons = list(filter(lambda x: (x is not None and x != self.first_upg_btn
-                              and x != self.second_upg_btn, x != self.third_upg_btn), self.buttons))
-        y = len(active_buttons) / 2 * BUTTON_SIZE[1]
-        for i, btn in enumerate(active_buttons):
-            btn.rect.x = CENTER_POINT[0] + MARGIN_LEFT_BUTTON
-            btn.rect.y = CENTER_POINT[1] - y + i * BUTTON_SIZE[1]
             btn.rebuild()
 
     def add_first_upg_btn(self):

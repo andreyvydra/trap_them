@@ -327,6 +327,7 @@ class Mob(Sprite):
         delta_x = [-1, 0, 0, 1]
         delta_y = [0, -1, 1, 0]
         while queue:
+            previous = row, col
             row, col = queue.pop()
             for delta_row, delta_col in zip(delta_y, delta_x):
                 if 0 <= delta_row + row < self.level.level_map.height and \
