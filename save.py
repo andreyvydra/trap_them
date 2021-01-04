@@ -56,7 +56,7 @@ class Save:
                                  'x': sprite.rect.x,
                                  'y': sprite.rect.y}
                                 for sprite in level.coins]}
-        return level_data
+        return level_data, level.level_number
 
     def get_map_data(self, level):
         w, h = level.level_map.width, level.level_map.height

@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 import pygame_gui
 import pickle
@@ -11,20 +13,26 @@ def game():
     # Если в меню была нажата кнопка продолжить игру, то
     # level_map и level просто подгружается, а если нет, то
     # создание карты по дефолту
-    if msg == 'continue':
+    '''if msg == 'continue':
         level_map, level = save.get_level_and_map(screen)
     else:
         level_map = Map('map')
         level_map.create_map()
         level_map.load_map()
         level = Level(level_map, screen)
-        level.load_sprites()
+        level.load_sprites()'''
+
+    level_map = Map('map')
+    level_map.create_map()
+    level_map.load_map()
+    level = Level(level_map, screen, 10)
+    level.load_sprites()
 
     running = True
     is_pressed_escape = False
 
     while running:
-        if level.game_over:
+        if level.game_over and not level.player.alive():
             game_over_res = game_over()
             if game_over_res == 'load_game':
                 level_map, level = save.get_level_and_map(screen)
@@ -32,6 +40,16 @@ def game():
                 return 'quit'
             elif game_over_res == 'quit_to_menu':
                 return
+        elif level.game_over and level.level_number != 10:
+            number_of_level = level.level_number
+            level_map = Map('map')
+            level_map.create_map()
+            level_map.load_map()
+            level = Level(level_map, screen, number_of_level + 1)
+            level.load_sprites()
+            save.save_game(level)
+        elif level.game_over and level.level_number == 10:
+            ending()
 
         if is_pressed_escape:
             pause_res = pause(level)
@@ -104,6 +122,24 @@ def pause(level):
         pause_manager.update(td)
         pause_manager.draw_ui(pause_surface)
         screen.blit(pause_surface, (0, 0))
+        pygame.display.flip()
+
+
+def ending():
+    font = pygame.font.Font(None, 70)
+    text = font.render('Вы прошли нашу игру, спасибо!', True, (255, 0, 255))
+    text_w = text.get_width()
+    text_h = text.get_height()
+    x, y = CENTER_POINT[0] - text_w // 2, CENTER_POINT[1] - text_h // 2
+    running = True
+    while running:
+        screen.fill('#282828')
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+        screen.blit(text, (x, y))
+
         pygame.display.flip()
 
 

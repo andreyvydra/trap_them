@@ -137,7 +137,7 @@ class Level:
         self.render_mp()
         if self.alpha_channel_for_lvl_number > 0:
             self.level_number_text.set_alpha(self.alpha_channel_for_lvl_number)
-            self.alpha_channel_for_lvl_number -= 255 / FPS
+            self.alpha_channel_for_lvl_number -= 255 / FPS * 0.5
             self.screen.blit(self.level_number_text, (100, 100))
 
     def render_mp(self):
@@ -195,6 +195,8 @@ class Level:
                         self.screen.blit(text, (text_x, text_y))
 
     def update(self, *args, **kwargs):
+        if not any(filter(lambda x: x.alive(), self.enemies)):
+            self.game_over = True
         if self.is_player_turn:
             self.all_sprites.update(*args, **kwargs)
         else:
@@ -224,10 +226,13 @@ class Level:
 
     def load_data(self, data):
         # Поочрёдно загрузить все типы объектов из даты сохранения
-        self.load_floor(data['floor'])
-        self.load_enemies(data['enemies'])
-        self.load_coins(data['coins'])
-        self.load_cages(data['cages'])
+        level_data, number_of_level = data[0], data[1]
+        self.level_number = number_of_level
+        self.update_text_number_of_level()
+        self.load_floor(level_data['floor'])
+        self.load_enemies(level_data['enemies'])
+        self.load_coins(level_data['coins'])
+        self.load_cages(level_data['cages'])
 
     def load_player(self, data):
         col, row = data['col'], data['row']
@@ -271,6 +276,10 @@ class Level:
             current_floor = Floor(col, row, x, y,
                                   self.all_sprites, self.floor)
             self.sprites_arr[row][col][0] = current_floor
+
+    def update_text_number_of_level(self):
+        self.level_number_text = self.font.render(f'Level {str(self.level_number)}',
+                                                  True, (255, 255, 255))
 
     def load_sprites_from_first_layer(self):
         for row in range(self.level_map.height):
