@@ -84,11 +84,13 @@ class Map:
 
 
 class Level:
-    def __init__(self, level_map, screen):
+    def __init__(self, level_map, screen, level_number=1):
         self.level_map = level_map
         self.sprites_arr = [[[None, []] for _ in range(self.level_map.width)]
                             for _ in range(self.level_map.height)]
         self.screen = screen
+        self.level_number = level_number
+        self.alpha_channel_for_lvl_number = 255
 
         # Начальные x и y для отрисовки карты
         self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
@@ -111,11 +113,13 @@ class Level:
         self.player = None
 
         self.font = pygame.font.Font(None, 50)
+        self.level_number_text = self.font.render(f'Level {str(self.level_number)}', True, (255, 255, 255))
         # 1 - мирный, мобы просто идут на игрока,
         # 2 - нормальный, ищет кратчайший путь, но просто так на ловушки не попадается
         self.difficulty = self.level_map.difficulty
 
     def render(self):
+
         self.floor.draw(self.screen)
         self.coins.draw(self.screen)
         self.traps.draw(self.screen)
@@ -131,6 +135,10 @@ class Level:
         self.render_health()
         self.render_num_characters()
         self.render_mp()
+        if self.alpha_channel_for_lvl_number > 0:
+            self.level_number_text.set_alpha(self.alpha_channel_for_lvl_number)
+            self.alpha_channel_for_lvl_number -= 255 / FPS
+            self.screen.blit(self.level_number_text, (100, 100))
 
     def render_mp(self):
         for i in range(self.player.max_steps):
