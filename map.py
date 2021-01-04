@@ -60,7 +60,6 @@ class Map:
         else:
             self.num_characters = self.width * self.height // 4 + 1
             num_coins = self.width * self.height // 20
-        print(self.num_characters, num_coins)
         # матрица, где для каждой ячейки хранится row и col
         matrix = [[0] * self.width for row in range(self.height)]
         result = []
