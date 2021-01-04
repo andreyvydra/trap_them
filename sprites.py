@@ -217,9 +217,12 @@ class Coin(Sprite):
         self.drawing_col = col + SECOND_LAYER
         self.drawing_row = row + SECOND_LAYER
         self.level = level
+        self.pick_up_sound = pygame.mixer.Sound('sounds/coin/pick_up.ogg')
+        self.pick_up_sound.set_volume(0.05)
 
     def update(self, *args, **kwargs):
         if self.level.player.col == self.col and self.level.player.row == self.row:
+            self.pick_up_sound.play()
             self.level.player.coins += 1
             self.kill()
         for enemy in self.level.enemies:

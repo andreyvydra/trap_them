@@ -26,7 +26,7 @@ def game():
     running = True
     is_pressed_escape = False
     game_music.set_volume(0.25)
-    game_music.play(100, 0, 10000)
+    game_music.play(-1, 0, 10000)
     while running:
         if level.game_over:
             game_music.stop()
@@ -37,7 +37,7 @@ def game():
                 return 'quit'
             elif game_over_res == 'quit_to_menu':
                 return
-            game_music.play(100, 0, 10000)
+            game_music.play(-1, 0, 10000)
 
         if is_pressed_escape:
             game_music.stop()
@@ -51,7 +51,7 @@ def game():
             elif pause_res == 'load_game':
                 level_map, level = save.get_level_and_map(screen)
                 is_pressed_escape = False
-            game_music.play(100, 0, 10000)
+            game_music.play(-1, 0, 10000)
 
         screen.fill('#282828')
         event = pygame.event.Event(0)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     pygame.init()
     music = pygame.mixer.Sound('songs/main_menu.ogg')
     music.set_volume(0.25)
-    music.play(100, 0, 10000)
+    music.play(-1, 0, 10000)
     pygame.display.set_caption("'КУБЫ!'")
     screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
@@ -172,7 +172,7 @@ if __name__ == '__main__':
             res = game()
             if res == 'quit':
                 sys.exit()
-            music.play(100, 0, 10000)
+            music.play(-1, 0, 10000)
 
         is_button_game_pressed = False
 
