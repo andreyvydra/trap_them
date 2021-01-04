@@ -1,5 +1,3 @@
-import sys
-
 import pygame
 import pygame_gui
 import pickle
@@ -7,12 +5,14 @@ from map import *
 from settings import *
 from menu import *
 from save import *
+import sys
 
 
 def game():
     # Если в меню была нажата кнопка продолжить игру, то
     # level_map и level просто подгружается, а если нет, то
     # создание карты по дефолту
+    game_music = pygame.mixer.Sound('songs/gameplay.ogg')
     if msg == 'continue':
         level_map, level = save.get_level_and_map(screen)
     else:
@@ -30,9 +30,11 @@ def game():
 
     running = True
     is_pressed_escape = False
-
+    game_music.set_volume(0.25)
+    game_music.play(-1, 0, 10000)
     while running:
         if level.game_over and not level.player.alive():
+            game_music.stop()
             game_over_res = game_over()
             if game_over_res == 'load_game':
                 level_map, level = save.get_level_and_map(screen)
@@ -40,6 +42,7 @@ def game():
                 return 'quit'
             elif game_over_res == 'quit_to_menu':
                 return
+            game_music.play(-1, 0, 10000)
         elif level.game_over and level.level_number != 10:
             number_of_level = level.level_number
             level_map = Map('map')
@@ -52,6 +55,7 @@ def game():
             ending()
 
         if is_pressed_escape:
+            game_music.stop()
             pause_res = pause(level)
             if pause_res == 'quit':
                 return 'quit'
@@ -62,6 +66,7 @@ def game():
             elif pause_res == 'load_game':
                 level_map, level = save.get_level_and_map(screen)
                 is_pressed_escape = False
+            game_music.play(-1, 0, 10000)
 
         screen.fill('#282828')
         event = pygame.event.Event(0)
@@ -176,12 +181,16 @@ def game_over():
 
 
 if __name__ == '__main__':
+    pygame.mixer.init()
     pygame.init()
+    music = pygame.mixer.Sound('songs/main_menu.ogg')
+    music.set_volume(0.25)
+    music.play(-1, 0, 10000)
     pygame.display.set_caption("'КУБЫ!'")
     screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
-    main_menu = Menu(manager, continue_btn=True, new_game_btn=True)
+    main_menu = Menu(manager, continue_btn=True, new_game_btn=True, quit_btn=True)
     save = Save('saves/save.pickle')
 
     is_button_game_pressed = False
@@ -192,10 +201,11 @@ if __name__ == '__main__':
         time_delta = clock.tick(FPS) / 1000.0
 
         if is_button_game_pressed:
+            music.stop()
             res = game()
             if res == 'quit':
-                pygame.quit()
-                break
+                sys.exit()
+            music.play(-1, 0, 10000)
 
         is_button_game_pressed = False
 
@@ -213,6 +223,8 @@ if __name__ == '__main__':
                     if event.ui_element == main_menu.new_game_btn:
                         is_button_game_pressed = True
                         msg = 'new_game'
+                    if event.ui_element == main_menu.quit_btn:
+                        sys.exit()
 
             manager.process_events(event)
 
