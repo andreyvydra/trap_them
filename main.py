@@ -13,20 +13,20 @@ def game():
     # Если в меню была нажата кнопка продолжить игру, то
     # level_map и level просто подгружается, а если нет, то
     # создание карты по дефолту
-    '''if msg == 'continue':
+    if msg == 'continue':
         level_map, level = save.get_level_and_map(screen)
     else:
         level_map = Map('map')
         level_map.create_map()
         level_map.load_map()
         level = Level(level_map, screen)
-        level.load_sprites()'''
+        level.load_sprites()
 
-    level_map = Map('map')
+    '''level_map = Map('map')
     level_map.create_map()
     level_map.load_map()
     level = Level(level_map, screen, 10)
-    level.load_sprites()
+    level.load_sprites()'''
 
     running = True
     is_pressed_escape = False
