@@ -22,16 +22,11 @@ def game():
         level = Level(level_map, screen)
         level.load_sprites()
 
-    '''level_map = Map('map')
-    level_map.create_map()
-    level_map.load_map()
-    level = Level(level_map, screen, 10)
-    level.load_sprites()'''
-
     running = True
     is_pressed_escape = False
     game_music.set_volume(0.25)
     game_music.play(-1, 0, 10000)
+
     while running:
         if level.game_over and not level.player.alive():
             game_music.stop()
@@ -45,12 +40,32 @@ def game():
             game_music.play(-1, 0, 10000)
         elif level.game_over and level.level_number != 10:
             number_of_level = level.level_number
+            upgrades_res = upgrades(level)
+            max_health, health, max_steps, abilities, coins = level.player.max_health, \
+                                                              level.player.health, \
+                                                              level.player.max_steps, \
+                                                              level.player.abilities, \
+                                                              level.player.coins
+            if upgrades_res == 'first':
+                if health == max_health:
+                    health += 1
+                max_health += 1
+            elif upgrades_res == 'second':
+                max_steps += 1
+            elif upgrades_res == 'third':
+                pass
             level_map = Map('map')
             level_map.create_map()
             level_map.load_map()
             level = Level(level_map, screen, number_of_level + 1)
             level.load_sprites()
             save.save_game(level)
+            level.player.max_health = max_health
+            level.player.health = health
+            level.player.max_steps = max_steps
+            level.player.abilities = abilities
+            level.player.coins = coins
+            level.player.steps = max_steps
         elif level.game_over and level.level_number == 10:
             ending()
 
@@ -180,6 +195,41 @@ def game_over():
         pygame.display.flip()
 
 
+def upgrades(level):
+    upgrades_surface = pygame.surface.Surface(SCREEN_SIZE)
+    upgrades_surface.set_alpha(100)
+    upgrades_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    menu = UpgradeMenu(upgrades_manager, first_upg_btn=True, second_upg_btn=True,
+                quit_btn=True, third_upg_btn=True, back_to_menu_btn=True)
+    running = True
+
+    while running:
+        upgrades_surface.fill('#282828')
+        td = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 'quit'
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return 'continue'
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == menu.first_upg_btn:
+                        return 'first'
+                    if event.ui_element == menu.second_upg_btn:
+                        return 'second'
+                    if event.ui_element == menu.third_upg_btn:
+                        return 'third'
+
+            upgrades_manager.process_events(event)
+
+        upgrades_manager.update(td)
+        upgrades_manager.draw_ui(upgrades_surface)
+        screen.blit(upgrades_surface, (0, 0))
+        pygame.display.flip()
+
+
 if __name__ == '__main__':
     pygame.mixer.init()
     pygame.init()
@@ -190,7 +240,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
-    main_menu = Menu(manager, continue_btn=True, new_game_btn=True, quit_btn=True)
+    main_menu = Menu(manager, continue_btn=True, new_game_btn=True)
     save = Save('saves/save.pickle')
 
     is_button_game_pressed = False

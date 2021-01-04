@@ -55,10 +55,10 @@ class Map:
         self.width = randrange(5, 10)
         self.height = randrange(5, 10)
         if self.difficulty == 1:
-            num_characters = self.width * self.height // 5 + 1
+            self.num_characters = self.width * self.height // 5 + 1
             num_coins = self.width * self.height // 10
         else:
-            num_characters = self.width * self.height // 4 + 1
+            self.num_characters = self.width * self.height // 4 + 1
             num_coins = self.width * self.height // 20
         # матрица, где для каждой ячейки хранится row и col
         matrix = [[0] * self.width for row in range(self.height)]
@@ -68,7 +68,7 @@ class Map:
                 result.append(' '.join(str(i) for i in matrix[row]))
             current_file.writelines('\n'.join(result))
         characters = sample([(row, col) for row in range(self.height) for col in range(self.width)],
-                            num_characters)
+                            self.num_characters)
         coins = sample(characters, num_coins)
         for characters_row, characters_col in characters:
             matrix[characters_row][characters_col] = 2
@@ -81,6 +81,7 @@ class Map:
             for row in range(self.height):
                 result.append(' '.join(str(i) for i in matrix[row]))
             current_file.writelines('\n'.join(result))
+        self.num_characters -= num_coins
 
 
 class Level:
