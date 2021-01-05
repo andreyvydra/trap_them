@@ -38,7 +38,8 @@ class Save:
                                   for sprite in level.enemies],
 
                       'floor': [{'col': sprite.col,
-                                 'row': sprite.row}
+                                 'row': sprite.row,
+                                 'type_of_block': sprite.type_of_block}
                                 for sprite in level.floor],
 
                       'cages': [{'col': sprite.col,

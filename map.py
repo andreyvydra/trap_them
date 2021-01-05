@@ -277,6 +277,7 @@ class Level:
         for block in floor:
             col, row = block['col'], block['row']
             x, y = self.get_cords_for_block((col, row))
+            type_of_block = block['type_of_block']
             current_floor = Floor(col, row, x, y,
                                   self.all_sprites, self.floor, type_of_block=type_of_block)
             self.sprites_arr[row][col][0] = current_floor
