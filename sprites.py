@@ -190,9 +190,7 @@ class Cage(Sprite):
                             self.level.player.coins += character_for_animation.coins
                             continue
                         trapped_character.kill()
-                        if isinstance(trapped_character, Mob):
-                            self.level.player.coins += trapped_character.coins
-                            self.level.level_map.num_characters -= 1
+                        self.level.player.coins += trapped_character.coins
 
                 timer = 0
                 alpha_channel = 255
@@ -207,8 +205,6 @@ class Cage(Sprite):
                     timer += 1
                 character_for_animation.kill()
                 self.kill()
-                if isinstance(character_for_animation, Mob):
-                    self.level.level_map.num_characters -= 1
                 row, col = character_for_animation.row, character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
 
