@@ -17,7 +17,6 @@ def game():
         level_map, level = save.get_level_and_map(screen)
     else:
         level_map = Map('map')
-        level_map.create_map()
         level_map.load_map()
         level = Level(level_map, screen)
         level.load_sprites()
@@ -55,7 +54,6 @@ def game():
             elif upgrades_res == 'third':
                 pass
             level_map = Map('map')
-            level_map.create_map()
             level_map.load_map()
             level = Level(level_map, screen, number_of_level + 1)
             level.load_sprites()

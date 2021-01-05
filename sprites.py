@@ -20,10 +20,15 @@ class Block(Sprite):
 
 
 class Floor(Block):
-    img = pygame.image.load('sprites/floor.png')
+    images = {0: pygame.image.load('sprites/floor/floor-0-0.png'),
+              1: pygame.image.load('sprites/floor/floor-1-0.png'),
+              2: pygame.image.load('sprites/floor/floor-2-0.png'),
+              3: pygame.image.load('sprites/floor/floor-3-0.png')
+              }
 
-    def __init__(self, col, row, x, y, *groups):
-        super().__init__(Floor.img, col, row, x, y, *groups)
+    def __init__(self, col, row, x, y, *groups, type_of_block=0):
+        super().__init__(Floor.images[type_of_block], col, row, x, y, *groups)
+        self.type_of_block = type_of_block
         self.top_rect = pygame.rect.Rect(x, y, SCALED_TOP_RECT_WIDTH,
                                          SCALED_TOP_RECT_HEIGHT)
 
@@ -89,8 +94,11 @@ class Player(Sprite):
                                         mobs_count == 0 and self.selected:
                                     self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
                                     self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
-                                                          [character for character in
-                                                        self.level.sprites_arr[self.row][self.col][1]]))
+                                                                                                [character for character
+                                                                                                 in
+                                                                                                 self.level.sprites_arr[
+                                                                                                     self.row][
+                                                                                                     self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
                         elif args[0].button == 3 and not self.selected:
@@ -173,7 +181,6 @@ class Cage(Sprite):
                 self.level.sprites_arr[self.row][self.col][1].append(self)
             self.rect.y += self.top_rect_height
 
-
         elif self.level.sprites_arr[self.row][self.col][1] and \
                 (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
                  len(self.level.sprites_arr[self.row][self.col][1]) > 1):
@@ -190,7 +197,8 @@ class Cage(Sprite):
                             self.level.player.coins += character_for_animation.coins
                             continue
                         trapped_character.kill()
-                        self.level.player.coins += trapped_character.coins
+                        if isinstance(trapped_character, Mob):
+                            self.level.player.coins += trapped_character.coins
 
                 timer = 0
                 alpha_channel = 255
@@ -276,7 +284,9 @@ class Mob(Sprite):
                 cells = [(col, row)]
 
             self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
-                            [character for character in self.level.sprites_arr[self.row][self.col][1]]))
+                                                                        [character for character in
+                                                                         self.level.sprites_arr[self.row][self.col][
+                                                                             1]]))
             for cell in cells:
                 self.move(cell)
 
@@ -290,7 +300,9 @@ class Mob(Sprite):
                     self.level.game_over = True
                 self.kill()
                 self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
-                        [character for character in self.level.sprites_arr[self.row][self.col][1]]))
+                                                                            [character for character in
+                                                                             self.level.sprites_arr[self.row][self.col][
+                                                                                 1]]))
                 return
 
     def voln(self, x, y, x1, y1):
@@ -300,8 +312,8 @@ class Mob(Sprite):
             board.append([])
             for col in range(self.level.level_map.width):
                 board[row].append([-1, (row, col)] if self.level.sprites_arr[row][col][1] and
-                    isinstance(self.level.sprites_arr[row][col][1][0], Cage) else
-                    [1000, (row, col)])
+                                                      isinstance(self.level.sprites_arr[row][col][1][0], Cage) else
+                                  [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
         queue = deque()
