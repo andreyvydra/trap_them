@@ -2,7 +2,7 @@ from itertools import repeat
 
 from settings import *
 from sprites import *
-from random import sample, randrange
+from random import sample, randrange, randint
 import pygame
 
 
@@ -11,12 +11,7 @@ class Map:
 
         self.difficulty = difficulty
         self.path_map = path_map
-
-        # не нужно указывать размеры поля, программа возьмёт его по размеру файла
-        with open(path_map + '/map.txt') as map_for_init:
-            map_for_init = map_for_init.readlines()
-            self.height = len(map_for_init)
-            self.width = len(map_for_init[0].split())
+        self.create_map()
 
         if first_layer is None:
             self.first_layer = []
@@ -61,12 +56,15 @@ class Map:
             self.num_characters = self.width * self.height // 4 + 1
             num_coins = self.width * self.height // 20
         # матрица, где для каждой ячейки хранится row и col
-        matrix = [[0] * self.width for row in range(self.height)]
+        type_of_block = randint(0, 3)
+        matrix = [[type_of_block] * self.width for row in range(self.height)]
         result = []
         with open(self.path_map + '/map.txt', 'w') as current_file:
             for row in range(self.height):
                 result.append(' '.join(str(i) for i in matrix[row]))
             current_file.writelines('\n'.join(result))
+        # так как остаются клетки со значением спрайта пола, нужно обнулить все клетки
+        matrix = [[0] * self.width for row in range(self.height)]
         characters = sample([(row, col) for row in range(self.height) for col in range(self.width)],
                             self.num_characters)
         coins = sample(characters, num_coins)
@@ -280,7 +278,7 @@ class Level:
             col, row = block['col'], block['row']
             x, y = self.get_cords_for_block((col, row))
             current_floor = Floor(col, row, x, y,
-                                  self.all_sprites, self.floor)
+                                  self.all_sprites, self.floor, type_of_block=type_of_block)
             self.sprites_arr[row][col][0] = current_floor
 
     def update_text_number_of_level(self):
@@ -291,7 +289,8 @@ class Level:
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 x, y = self.get_cords_for_block((col, row))
-                current_floor = Floor(col, row, x, y, self.all_sprites, self.floor)
+                current_floor = Floor(col, row, x, y, self.all_sprites, self.floor,
+                                      type_of_block=self.level_map.first_layer[row][col])
                 self.sprites_arr[row][col][0] = current_floor
 
     def load_sprites_from_second_layer(self):
