@@ -38,9 +38,10 @@ class Floor(Block):
 
 
 class Player(Sprite):
-    img = pygame.image.load('sprites/gg_sprite.png')
+    img = pygame.image.load('sprites/gg_sprites.png')
 
-    def __init__(self, level, col, row, x, y, *groups, coins=5, steps=2):
+    def __init__(self, level, col, row, x, y, *groups,
+                 coins=5, steps=2, health=5, max_health=5, max_steps=2):
         super().__init__(Player.img, col, row, x, y, *groups)
         self.level = level
         # col_drawing используется, как переменная для отрисовки
@@ -48,11 +49,15 @@ class Player(Sprite):
         self.drawing_row = row + SECOND_LAYER
         self.coins = coins
         self.steps = steps
+        self.max_steps = max_steps
         self.flag = True
-
+        self.selected = False
+        self.health = health
+        self.max_health = max_health
+        self.abilities = []
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
-        self.call_down = 100
+        self.call_down = 200
         self.last_click = 0
 
     def change_cords(self, x, y):
@@ -66,42 +71,55 @@ class Player(Sprite):
         self.drawing_row = self.row + SECOND_LAYER
 
     def update(self, *args, **kwargs):
+        if self.steps == 0:
+            self.selected = False
         if self.level.is_player_turn:
             if args and args[0].type == pygame.MOUSEBUTTONDOWN:
-                if self.last_click > self.call_down:
-                    if args[0].button == 1:
-                        cell = self.level.get_cell_for_first_layer(args[0].pos)
-                        # SECOND_LAYER не учитываем
-                        if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and not \
-                                isinstance(self.level.sprites_arr[cell[1]][cell[0]][1], Mob):
-                            self.level.sprites_arr[cell[1]][cell[0]][1] = self
-                            self.level.sprites_arr[self.row][self.col][1] = None
-                            self.move(cell)
-                    elif args[0].button == 3:
-                        # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
-                        cell = self.level.get_cell_for_first_layer(args[0].pos)
-                        if cell is not None:
-                            staring_cell = cell[0] - 4, cell[1] - 4
-                            if cell is not None and self.coins > 0:
-                                self.coins -= 1
-                                Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
-                                     self.level.all_sprites, self.level.cages)
-                    # на колёсико мыши конец хода игрока
-                    if args[0].button == 2:
-                        self.level.is_player_turn = False
-                        font = pygame.font.Font(None, 50)
-                        text = font.render("Enemies' move!", True, (100, 255, 100))
-                        text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                        text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
-                        self.level.screen.blit(text, (text_x, text_y))
-                        self.level.render()
-                        pygame.display.flip()
-                        ping_for_message = 10000000
-                        while ping_for_message != 0:
-                            ping_for_message -= 1
+                if self.steps != 0:
+                    if self.last_click > self.call_down:
+                        if args[0].button == 1:
+                            cell = self.level.get_cell_for_first_layer(args[0].pos)
+                            if cell is not None and cell[0] == self.col and cell[1] == self.row:
+                                self.selected = not self.selected
+                            elif cell is not None:
+                                mobs_count = len(list(filter(lambda x: isinstance(x, Mob),
+                                                             self.level.sprites_arr[cell[1]][cell[0]][1])))
+                                # SECOND_LAYER не учитываем
+                                if cell is not None and abs(cell[0] - self.col) + abs(cell[1] - self.row) == 1 and \
+                                        mobs_count == 0 and self.selected:
+                                    self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
+                                    self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                                                          [character for character in
+                                                        self.level.sprites_arr[self.row][self.col][1]]))
+                                    self.steps -= 1
+                                    self.move(cell)
+                        elif args[0].button == 3 and not self.selected:
+                            # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
+                            cell = self.level.get_cell_for_first_layer(args[0].pos)
+                            if cell is not None:
+                                staring_cell = cell[0] - 4, cell[1] - 4
+                                if cell is not None and self.coins > 0:
+                                    self.coins -= 1
+                                    self.steps -= 1
+                                    Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
+                                         self.level.all_sprites, self.level.cages)
 
-                        self.level.screen.fill('#282828')
-                    self.last_click = 0
+                # на колёсико мыши конец хода игрока
+                if args[0].button == 2:
+                    self.level.is_player_turn = False
+                    font = pygame.font.Font(None, 50)
+                    text = font.render("Enemies' move!", True, (100, 255, 100))
+                    text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                    text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
+                    self.level.screen.blit(text, (text_x, text_y))
+                    self.level.render()
+                    pygame.display.flip()
+                    ping_for_message = 10000000
+                    while ping_for_message != 0:
+                        ping_for_message -= 1
+
+                    self.level.screen.fill('#282828')
+                self.last_click = 0
             else:
                 self.last_click += 1000 // FPS
 
@@ -147,37 +165,48 @@ class Cage(Sprite):
             else:
                 block = self.level.sprites_arr[self.row][self.col][0]
                 self.rect.y = block.rect.y - self.image.get_height()
-                self.level.sprites_arr[self.row][self.col][1] = self
                 self.is_fallen = True
                 self.kill()
                 self.level.traps.add(self)
                 self.level.all_sprites.add(self)
                 self.image = Cage.trap_image.copy()
+                self.level.sprites_arr[self.row][self.col][1].append(self)
             self.rect.y += self.top_rect_height
 
+
         elif self.level.sprites_arr[self.row][self.col][1] and \
-                self.level.sprites_arr[self.row][self.col][1].__class__ != Cage:
+                (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
+                 len(self.level.sprites_arr[self.row][self.col][1]) > 1):
             self.image = Cage.image.copy()
-            trapped_character = self.level.sprites_arr[self.row][self.col][1]
-            if trapped_character and trapped_character.__class__ != Cage:
+            trapped_characters = self.level.sprites_arr[self.row][self.col][1]
+            # для проигрывания анимации нужно выбрать один из спрайтов
+            # все остальные просто убираются
+            character_for_animation = None
+            if trapped_characters:
+                for trapped_character in trapped_characters:
+                    if not isinstance(trapped_character, Cage):
+                        if not character_for_animation:
+                            character_for_animation = trapped_character
+                            self.level.player.coins += character_for_animation.coins
+                            continue
+                        trapped_character.kill()
+                        self.level.player.coins += trapped_character.coins
+
                 timer = 0
                 alpha_channel = 255
-
                 while alpha_channel > 0:
                     if timer % FPS == 0:
                         self.level.screen.fill('#282828')
                         alpha_channel -= 10
                         self.image.set_alpha(alpha_channel)
-                        trapped_character.image.set_alpha(alpha_channel)
+                        character_for_animation.image.set_alpha(alpha_channel)
                         self.level.render()
                         pygame.display.flip()
                     timer += 1
-
-                trapped_character.kill()
+                character_for_animation.kill()
                 self.kill()
-                self.level.sprites_arr[trapped_character.row][trapped_character.col][1] = None
-                if trapped_character.__class__ == Mob:
-                    self.level.player.coins += trapped_character.coins
+                row, col = character_for_animation.row, character_for_animation.col
+                self.level.sprites_arr[row][col][1] = []
 
 
 class Coin(Sprite):
@@ -188,24 +217,31 @@ class Coin(Sprite):
         self.drawing_col = col + SECOND_LAYER
         self.drawing_row = row + SECOND_LAYER
         self.level = level
+        self.pick_up_sound = pygame.mixer.Sound('sounds/coin/pick_up.ogg')
+        self.pick_up_sound.set_volume(0.05)
 
     def update(self, *args, **kwargs):
         if self.level.player.col == self.col and self.level.player.row == self.row:
+            self.pick_up_sound.play()
             self.level.player.coins += 1
             self.kill()
+        for enemy in self.level.enemies:
+            if enemy.col == self.col and enemy.row == self.row:
+                self.kill()
 
 
 class Mob(Sprite):
     # пока как заглушка спрайт гг
-    img = pygame.image.load('sprites/gg_sprite.png')
+    img = pygame.image.load('sprites/mob.png')
 
-    def __init__(self, level, col, row, x, y, *groups, coins=1, step=1):
+    def __init__(self, level, col, row, x, y, *groups, coins=1, step=1, damage=1):
         super().__init__(Mob.img, col, row, x, y, *groups)
         self.flag = False
         self.level = level
         # col_drawing используется, как переменная для отрисовки
         self.drawing_col = col
         self.drawing_row = row
+        self.damage = damage
 
         # self.coins отвечает за вознаграждение за поимку
         self.coins = coins
@@ -239,16 +275,23 @@ class Mob(Sprite):
 
                 cells = [(col, row)]
 
-            self.level.sprites_arr[self.row][self.col][1] = None
+            self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                            [character for character in self.level.sprites_arr[self.row][self.col][1]]))
             for cell in cells:
                 self.move(cell)
 
             # в этом случае SECOND_LAYER не нужно учитывать
-            self.level.sprites_arr[self.row][self.col][1] = self
+            self.level.sprites_arr[self.row][self.col][1].append(self)
             block = self.level.sprites_arr[self.row][self.col][0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
-                self.level.game_over = True
+                self.level.player.health = max(self.level.player.health - self.damage, 0)
+                if self.level.player.health == 0:
+                    self.level.game_over = True
+                self.kill()
+                self.level.level_map.num_characters -= 1
+                self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
+                        [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                 return
 
     def voln(self, x, y, x1, y1):
@@ -257,8 +300,9 @@ class Mob(Sprite):
         for row in range(self.level.level_map.height):
             board.append([])
             for col in range(self.level.level_map.width):
-                board[row].append([1000, (row, col)]
-                                  if self.level.sprites_arr[row][col][1].__class__ != Cage else [-1, (row, col)])
+                board[row].append([-1, (row, col)] if self.level.sprites_arr[row][col][1] and
+                    isinstance(self.level.sprites_arr[row][col][1][0], Cage) else
+                    [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
         queue = deque()
@@ -282,6 +326,7 @@ class Mob(Sprite):
         delta_x = [-1, 0, 0, 1]
         delta_y = [0, -1, 1, 0]
         while queue:
+            previous = row, col
             row, col = queue.pop()
             for delta_row, delta_col in zip(delta_y, delta_x):
                 if 0 <= delta_row + row < self.level.level_map.height and \
