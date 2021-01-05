@@ -110,7 +110,7 @@ class Player(Sprite):
                     font = pygame.font.Font(None, 50)
                     text = font.render("Enemies' move!", True, (100, 255, 100))
                     text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                    text_y = self.level.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
+                    text_y = 20
                     self.level.screen.blit(text, (text_x, text_y))
                     self.level.render()
                     pygame.display.flip()
@@ -289,7 +289,6 @@ class Mob(Sprite):
                 if self.level.player.health == 0:
                     self.level.game_over = True
                 self.kill()
-                self.level.level_map.num_characters -= 1
                 self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
                         [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                 return

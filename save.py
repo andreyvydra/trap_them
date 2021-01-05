@@ -34,27 +34,19 @@ class Save:
         level_data = {'enemies': [{'col': sprite.col,
                                    'row': sprite.row,
                                    'coins': sprite.coins,
-                                   'step': sprite.step,
-                                   'x': sprite.rect.x,
-                                   'y': sprite.rect.y}
+                                   'step': sprite.step}
                                   for sprite in level.enemies],
 
                       'floor': [{'col': sprite.col,
-                                 'row': sprite.row,
-                                 'x': sprite.rect.x,
-                                 'y': sprite.rect.y}
+                                 'row': sprite.row}
                                 for sprite in level.floor],
 
                       'cages': [{'col': sprite.col,
-                                 'row': sprite.row,
-                                 'x': sprite.rect.x,
-                                 'y': sprite.rect.y}
+                                 'row': sprite.row}
                                 for sprite in level.cages],
 
                       'coins': [{'col': sprite.col,
-                                 'row': sprite.row,
-                                 'x': sprite.rect.x,
-                                 'y': sprite.rect.y}
+                                 'row': sprite.row}
                                 for sprite in level.coins]}
         return level_data, level.level_number
 
@@ -69,7 +61,5 @@ class Save:
                        'max_health': level.player.max_health,
                        'max_steps': level.player.max_steps,
                        'col': level.player.col,
-                       'row': level.player.row,
-                       'x': level.player.rect.x,
-                       'y': level.player.rect.y}
+                       'row': level.player.row}
         return player_data
