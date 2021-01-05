@@ -242,7 +242,8 @@ if __name__ == '__main__':
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
     main_menu = Menu(manager, continue_btn=True, new_game_btn=True)
     save = Save('saves/save.pickle')
-
+    bg = pygame.image.load('bgs/menu_bg.jpg')
+    bg = pygame.transform.scale(bg, SCREEN_SIZE)
     is_button_game_pressed = False
 
     mainloop = True
@@ -277,7 +278,7 @@ if __name__ == '__main__':
                         sys.exit()
 
             manager.process_events(event)
-
+        screen.blit(bg, (0, 0))
         manager.update(time_delta)
         manager.draw_ui(screen)
         pygame.display.flip()

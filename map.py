@@ -207,7 +207,7 @@ class Level:
             font = pygame.font.Font(None, 50)
             text = font.render("Your move!", True, (100, 255, 100))
             text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-            text_y = self.y - text.get_height() - HEIGHT_PLAYER - SCALED_CUBE_HEIGHT // 2
+            text_y = 20
             self.screen.blit(text, (text_x, text_y))
             self.is_player_turn = True
             self.render()
@@ -237,7 +237,8 @@ class Level:
 
     def load_player(self, data):
         col, row = data['col'], data['row']
-        x, y = data['x'], data['y']
+        drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+        x, y = self.get_cords_for_player((drawing_col, drawing_row))
         coins, steps = data['coins'], data['steps']
         max_steps = data['max_steps']
         health, max_health = data['health'], data['max_health']
@@ -250,21 +251,25 @@ class Level:
     def load_coins(self, coins):
         for coin in coins:
             col, row = coin['col'], coin['row']
-            x, y = coin['x'], coin['y']
+            x, y = self.get_cords_for_block((col + SECOND_LAYER, row + SECOND_LAYER))
+            x += (SCALED_CUBE_WIDTH - Coin.image.get_width()) // 2
+            y += (SCALED_CUBE_HEIGHT - Coin.image.get_height()) - SCALED_TOP_RECT_HEIGHT // 2
             Coin(self, col, row, x, y,
                  self.all_sprites, self.coins)
 
     def load_cages(self, cages):
         for cage in cages:
             col, row = cage['col'], cage['row']
-            x, y = cage['x'], cage['y']
+            drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+            x, y = self.get_cords_for_block((drawing_col, drawing_row))
             Cage(self, col, row, x, y,
                  self.all_sprites, self.floor)
 
     def load_enemies(self, enemies):
         for enemy in enemies:
             col, row = enemy['col'], enemy['row']
-            x, y = enemy['x'], enemy['y']
+            drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+            x, y = self.get_cords_for_player((drawing_col, drawing_row))
             coins, step = enemy['coins'], enemy['step']
             new_mob = Mob(self, col, row, x, y,
                           self.all_sprites, self.enemies, coins=coins, step=step)
@@ -273,7 +278,7 @@ class Level:
     def load_floor(self, floor):
         for block in floor:
             col, row = block['col'], block['row']
-            x, y = block['x'], block['y']
+            x, y = self.get_cords_for_block((col, row))
             current_floor = Floor(col, row, x, y,
                                   self.all_sprites, self.floor)
             self.sprites_arr[row][col][0] = current_floor
