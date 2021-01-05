@@ -20,10 +20,15 @@ class Block(Sprite):
 
 
 class Floor(Block):
-    img = pygame.image.load('sprites/floor.png')
+    images = {0: pygame.image.load('sprites/floor/floor-0-0.png'),
+              1: pygame.image.load('sprites/floor/floor-1-0.png'),
+              2: pygame.image.load('sprites/floor/floor-2-0.png'),
+              3: pygame.image.load('sprites/floor/floor-3-0.png')
+              }
 
-    def __init__(self, col, row, x, y, *groups):
-        super().__init__(Floor.img, col, row, x, y, *groups)
+    def __init__(self, col, row, x, y, *groups, type_of_block=0):
+        super().__init__(Floor.images[type_of_block], col, row, x, y, *groups)
+        self.type_of_block = type_of_block
         self.top_rect = pygame.rect.Rect(x, y, SCALED_TOP_RECT_WIDTH,
                                          SCALED_TOP_RECT_HEIGHT)
 
@@ -192,7 +197,6 @@ class Cage(Sprite):
                         trapped_character.kill()
                         if isinstance(trapped_character, Mob):
                             self.level.player.coins += trapped_character.coins
-                            self.level.level_map.num_characters -= 1
 
                 timer = 0
                 alpha_channel = 255
@@ -207,8 +211,6 @@ class Cage(Sprite):
                     timer += 1
                 character_for_animation.kill()
                 self.kill()
-                if isinstance(character_for_animation, Mob):
-                    self.level.level_map.num_characters -= 1
                 row, col = character_for_animation.row, character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
 

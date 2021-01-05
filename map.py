@@ -2,7 +2,7 @@ from itertools import repeat
 
 from settings import *
 from sprites import *
-from random import sample, randrange
+from random import sample, randrange, randint
 import pygame
 
 
@@ -61,7 +61,9 @@ class Map:
             self.num_characters = self.width * self.height // 4 + 1
             num_coins = self.width * self.height // 20
         # матрица, где для каждой ячейки хранится row и col
-        matrix = [[0] * self.width for row in range(self.height)]
+        type_of_block = randint(0, 3)
+        print(type_of_block)
+        matrix = [[type_of_block] * self.width for row in range(self.height)]
         result = []
         with open(self.path_map + '/map.txt', 'w') as current_file:
             for row in range(self.height):
@@ -274,8 +276,9 @@ class Level:
         for block in floor:
             col, row = block['col'], block['row']
             x, y = block['x'], block['y']
+            type_of_block = block['type_of_block']
             current_floor = Floor(col, row, x, y,
-                                  self.all_sprites, self.floor)
+                                  self.all_sprites, self.floor, type_of_block=type_of_block)
             self.sprites_arr[row][col][0] = current_floor
 
     def update_text_number_of_level(self):
@@ -286,7 +289,8 @@ class Level:
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 x, y = self.get_cords_for_block((col, row))
-                current_floor = Floor(col, row, x, y, self.all_sprites, self.floor)
+                current_floor = Floor(col, row, x, y, self.all_sprites, self.floor,
+                                      type_of_block=self.level_map.first_layer[row][col])
                 self.sprites_arr[row][col][0] = current_floor
 
     def load_sprites_from_second_layer(self):

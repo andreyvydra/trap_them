@@ -42,7 +42,8 @@ class Save:
                       'floor': [{'col': sprite.col,
                                  'row': sprite.row,
                                  'x': sprite.rect.x,
-                                 'y': sprite.rect.y}
+                                 'y': sprite.rect.y,
+                                 'type_of_block': sprite.type_of_block}
                                 for sprite in level.floor],
 
                       'cages': [{'col': sprite.col,
