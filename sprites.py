@@ -60,7 +60,6 @@ class Player(Sprite):
         self.selected = False
         self.health = health
         self.max_health = max_health
-        self.abilities = []
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
         self.call_down = 200
