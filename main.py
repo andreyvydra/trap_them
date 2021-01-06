@@ -40,19 +40,19 @@ def game():
         elif level.game_over and level.level_number != 10:
             number_of_level = level.level_number
             upgrades_res = upgrades(level)
-            max_health, health, max_steps, abilities, coins = level.player.max_health, \
+            max_health, health, max_steps, abilities, coins, cage_dis = level.player.max_health, \
                                                               level.player.health, \
                                                               level.player.max_steps, \
                                                               level.player.abilities, \
-                                                              level.player.coins
+                                                              level.player.coins, \
+                                                              level.player.cage_distance
             if upgrades_res == 'first':
-                if health == max_health:
-                    health += 1
+                health += 1
                 max_health += 1
             elif upgrades_res == 'second':
                 max_steps += 1
             elif upgrades_res == 'third':
-                pass
+                cage_dis += 1
             level_map = Map('map')
             level_map.load_map()
             level = Level(level_map, screen, number_of_level + 1)
@@ -64,6 +64,7 @@ def game():
             level.player.abilities = abilities
             level.player.coins = coins
             level.player.steps = max_steps
+            level.player.cage_distance = cage_dis
         elif level.game_over and level.level_number == 10:
             ending()
 

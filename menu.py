@@ -155,10 +155,10 @@ class UpgradeMenu:
     def add_third_upg_btn(self):
         third_upg_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
                                                                                 BUTTON_SIZE),
-                                                      text='Случайная способность',
+                                                      text='Увеличить cage_dis на 1',
                                                       manager=self.manager)
         third_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-                                                       image_surface=pygame.image.load('sprites/random_ability.png'),
+                                                       image_surface=pygame.image.load('sprites/+cage_distance.png'),
                                                        manager=self.manager)
         self.third_upg_btn = third_upg_btn
         self.third_upg_image = third_upg_image

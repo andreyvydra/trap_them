@@ -23,6 +23,8 @@ class Map:
         else:
             self.second_layer = second_layer
 
+        self.list_abilities = []
+
     def load_map(self):
         # Подгружаем наши layers
         self.load_floor_layer()
@@ -123,6 +125,7 @@ class Level:
         self.coins.draw(self.screen)
         self.traps.draw(self.screen)
 
+        self.render_cage_cells()
         if not self.game_over:
             self.screen.blit(self.player.image, self.player.rect)
 
@@ -144,6 +147,22 @@ class Level:
             if i + 1 <= self.player.steps:
                 pygame.draw.rect(self.screen, (15, 82, 186), (20 + (i * 60), 50, 60, 25))
             pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 50, 60, 25), 2)
+
+    def render_cage_cells(self):
+        if self.player.alive() and not self.player.selected:
+            x = [-1, -1, 0, -1, 0, 1, 1, 1]
+            y = [-1, 0, -1, 1, 1, 0, 1, -1]
+            radius = 7
+            for col, row in zip(x, y):
+                for distance_x in range(1, self.player.cage_distance + 1):
+                    for distance_y in range(1, self.player.cage_distance + 1):
+                        if 0 <= self.player.col + col * distance_x < self.level_map.width and \
+                                0 <= self.player.row + row * distance_y < self.level_map.height and \
+                                (col * distance_x) ** 2 + (row * distance_y) ** 2 > 2:
+                                cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col * distance_x,
+                                                                                    self.player.row + row * distance_y))
+                                pygame.draw.circle(self.screen, ('#00E5DF'), (cur_x, cur_y), radius)
+
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
