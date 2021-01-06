@@ -23,8 +23,6 @@ class Map:
         else:
             self.second_layer = second_layer
 
-        self.list_abilities = []
-
     def load_map(self):
         # Подгружаем наши layers
         self.load_floor_layer()
