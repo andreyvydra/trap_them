@@ -147,7 +147,7 @@ class Level:
             pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 50, 60, 25), 2)
 
     def render_cage_cells(self):
-        if self.player.alive() and not self.player.selected:
+        if self.player.alive() and not self.player.selected and self.player.steps:
             x = [-1, -1, 0, -1, 0, 1, 1, 1]
             y = [-1, 0, -1, 1, 1, 0, 1, -1]
             radius = 7
@@ -176,7 +176,7 @@ class Level:
             pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 20, 60, 25), 2)
 
     def render_players_moves(self):
-        if self.player.alive() and self.player.selected:
+        if self.player.alive() and self.player.selected and self.player.steps:
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
