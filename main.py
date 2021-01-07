@@ -16,7 +16,7 @@ def game():
     if msg == 'continue':
         level_map, level = save.get_level_and_map(screen)
     else:
-        level_map = Map('map')
+        level_map = Map('map', difficulty=data_of_game[0])
         level_map.load_map()
         level = Level(level_map, screen)
         level.load_sprites()
@@ -104,6 +104,72 @@ def game():
         pygame.display.flip()
 
 
+def pre_game_menu():
+    pre_game_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    btn_width, btn_height = 150, 50
+
+    elements = [1, [1, 1]]
+    y = len(elements) / 2 * btn_height
+    for i, elem in enumerate(elements):
+        if elem.__class__ == list:
+            x = len(elem) / 2 * btn_width
+            for j, item in enumerate(elem):
+                cur_x, cur_y = CENTER_POINT[0] - x + j * btn_width, CENTER_POINT[1] - y + i * btn_height
+                rect = pygame.Rect((cur_x, cur_y), (btn_width, btn_height))
+                elements[i][j] = rect
+        else:
+            cur_x, cur_y = CENTER_POINT[0] - btn_width, CENTER_POINT[1] - y + i * btn_height
+            rect = pygame.Rect((cur_x, cur_y), (btn_width * 2, btn_height))
+            elements[i] = rect
+
+    difficulty_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(options_list=['Низкий', 'Средний'],
+                                                                           starting_option='Низкий',
+                                                                           relative_rect=elements[0],
+                                                                           manager=pre_game_manager,
+                                                                           )
+
+    start_game = pygame_gui.elements.ui_button.UIButton(manager=pre_game_manager,
+                                                        relative_rect=elements[1][1],
+                                                        text='Начать игру')
+
+    back_to_menu = pygame_gui.elements.ui_button.UIButton(manager=pre_game_manager,
+                                                          relative_rect=elements[1][0],
+                                                          text='Выйти в меню')
+
+    running = True
+    difficulties = {'Низкий': 1,
+                    'Средний': 2}
+    difficulty = difficulties['Низкий']
+    data_of_game.clear()
+
+    while running:
+        screen.fill('#282828')
+        td = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return 'continue'
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+                    if event.ui_element == difficulty_menu:
+                        difficulty = difficulties[event.text]
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == start_game:
+                        return [difficulty]
+                    if event.ui_element == back_to_menu:
+                        return 'quit_to_menu'
+
+            pre_game_manager.process_events(event)
+
+        pre_game_manager.update(td)
+        pre_game_manager.draw_ui(screen)
+        screen.blit(screen, (0, 0))
+        pygame.display.flip()
+
+
 def pause(level):
     pause_surface = pygame.surface.Surface(SCREEN_SIZE)
     pause_surface.set_alpha(100)
@@ -117,7 +183,7 @@ def pause(level):
         td = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return 'quit'
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return 'continue'
@@ -174,7 +240,7 @@ def game_over():
         td = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return 'quit'
+                sys.exit()
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
@@ -198,7 +264,7 @@ def upgrades(level):
     upgrades_surface.set_alpha(100)
     upgrades_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
     menu = UpgradeMenu(upgrades_manager, first_upg_btn=True, second_upg_btn=True,
-                quit_btn=True, third_upg_btn=True, back_to_menu_btn=True)
+                       quit_btn=True, third_upg_btn=True, back_to_menu_btn=True)
     running = True
 
     while running:
@@ -206,7 +272,7 @@ def upgrades(level):
         td = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return 'quit'
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return 'continue'
@@ -228,6 +294,14 @@ def upgrades(level):
         pygame.display.flip()
 
 
+def start_game():
+    music.stop()
+    res = game()
+    if res == 'quit':
+        sys.exit()
+    music.play(-1, 0, 10000)
+
+
 if __name__ == '__main__':
     pygame.mixer.init()
     pygame.init()
@@ -243,20 +317,23 @@ if __name__ == '__main__':
     bg = pygame.image.load('bgs/menu_bg.jpg')
     bg = pygame.transform.scale(bg, SCREEN_SIZE)
     is_button_game_pressed = False
-
+    is_button_new_game_pressed = False
     mainloop = True
     msg = ''
+    data_of_game = []
     while mainloop:
         time_delta = clock.tick(FPS) / 1000.0
 
         if is_button_game_pressed:
-            music.stop()
-            res = game()
-            if res == 'quit':
-                sys.exit()
-            music.play(-1, 0, 10000)
+            start_game()
+        if is_button_new_game_pressed:
+            res = pre_game_menu()
+            if res.__class__ == list:
+                data_of_game = res
+                start_game()
 
         is_button_game_pressed = False
+        is_button_new_game_pressed = False
 
         screen.fill('#282828')
 
@@ -270,7 +347,7 @@ if __name__ == '__main__':
                         is_button_game_pressed = True
                         msg = 'continue'
                     if event.ui_element == main_menu.new_game_btn:
-                        is_button_game_pressed = True
+                        is_button_new_game_pressed = True
                         msg = 'new_game'
                     if event.ui_element == main_menu.quit_btn:
                         sys.exit()
