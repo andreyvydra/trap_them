@@ -59,8 +59,6 @@ class Player(Sprite):
         self.selected = False
         self.health = health
         self.max_health = max_health
-        self.abilities = []
-        self.is_pressed_end_move_btn = False
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
         self.call_down = 200
@@ -114,22 +112,6 @@ class Player(Sprite):
                                          self.level.all_sprites, self.level.cages)
 
                 self.last_click = 0
-
-            elif self.is_pressed_end_move_btn:
-                self.is_pressed_end_move_btn = False
-                self.level.is_player_turn = False
-                font = pygame.font.Font(None, 50)
-                text = font.render("Enemies' move!", True, (100, 255, 100))
-                text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                text_y = 20
-                self.level.screen.blit(text, (text_x, text_y))
-                self.level.render()
-                pygame.display.flip()
-                ping_for_message = 10000000
-                while ping_for_message != 0:
-                    ping_for_message -= 1
-
-                self.level.screen.fill('#282828')
 
             else:
                 self.last_click += 1000 // FPS

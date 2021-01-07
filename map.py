@@ -106,6 +106,7 @@ class Level:
         self.coins = pygame.sprite.Group()
         self.traps = pygame.sprite.Group()
         self.hearts = pygame.sprite.Group()
+        self.is_pressed_end_move_btn = False
 
         self.manager = None
 
@@ -204,6 +205,21 @@ class Level:
         self.manager.update(td)
         if self.is_player_turn:
             self.all_sprites.update(*args, **kwargs)
+            if self.is_pressed_end_move_btn:
+                self.is_pressed_end_move_btn = False
+                self.is_player_turn = False
+                font = pygame.font.Font(None, 50)
+                text = font.render("Enemies' move!", True, (100, 255, 100))
+                text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                text_y = 20
+                self.screen.blit(text, (text_x, text_y))
+                self.render()
+                pygame.display.flip()
+                ping_for_message = 10000000
+                while ping_for_message != 0:
+                    ping_for_message -= 1
+
+                self.screen.fill('#282828')
         else:
             self.enemies.update()
             self.cages.update()
@@ -221,8 +237,8 @@ class Level:
                 ping_for_message -= 1
 
             self.screen.fill('#282828')
-            self.is_player_turn = True
             self.player.steps = self.player.max_steps
+            self.player.is_pressed_end_move_btn = False
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
