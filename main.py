@@ -40,6 +40,7 @@ def game():
             game_over_res = game_over()
             if game_over_res == 'load_game':
                 level_map, level = save.get_level_and_map(screen)
+                level.manager = game_manager
             if game_over_res == 'quit':
                 return 'quit'
             elif game_over_res == 'quit_to_menu':
@@ -86,6 +87,7 @@ def game():
                 is_pressed_escape = False
             elif pause_res == 'load_game':
                 level_map, level = save.get_level_and_map(screen)
+                level.manager = game_manager
                 is_pressed_escape = False
             game_music.play(-1, 0, 10000)
 
@@ -114,7 +116,6 @@ def game():
         # for rect in level_map.floor:
         #    pygame.draw.rect(screen, (255, 255, 255), rect.top_rect, 1)
 
-        clock.tick(FPS)
         pygame.display.flip()
 
 
