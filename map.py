@@ -219,6 +219,7 @@ class Level:
             self.enemies.update()
             self.cages.update()
             self.traps.update()
+            self.player.steps = self.player.max_steps
             font = pygame.font.Font(None, 50)
             text = font.render("Your move!", True, (100, 255, 100))
             text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
@@ -233,7 +234,6 @@ class Level:
 
             self.screen.fill('#282828')
             self.is_player_turn = True
-            self.player.steps = self.player.max_steps
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
