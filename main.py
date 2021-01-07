@@ -72,6 +72,7 @@ def game():
             level.player.coins = coins
             level.player.steps = max_steps
             level.player.cage_distance = cage_dis
+            level.manager = game_manager
         elif level.game_over and level.level_number == 10:
             ending()
 
