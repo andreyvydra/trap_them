@@ -62,7 +62,7 @@ class Player(Sprite):
         self.max_health = max_health
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
-        self.call_down = 200
+        self.call_down = 100
         self.last_click = 0
         self.cage_distance = cage_distance
 
