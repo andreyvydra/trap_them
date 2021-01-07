@@ -46,7 +46,8 @@ class Player(Sprite):
     img = pygame.image.load('sprites/gg_sprites.png')
 
     def __init__(self, level, col, row, x, y, *groups,
-                 coins=5, steps=2, health=5, max_health=5, max_steps=2):
+                 coins=5, steps=2, health=5, max_health=5, max_steps=2,
+                 cage_distance=2):
         super().__init__(Player.img, col, row, x, y, *groups)
         self.level = level
         # col_drawing используется, как переменная для отрисовки
@@ -59,11 +60,11 @@ class Player(Sprite):
         self.selected = False
         self.health = health
         self.max_health = max_health
-        self.abilities = []
         # call_down для кнопки мыши, иначе несколько event за одно нажатие передаётся
         # тк игрок немоментально отпускает кнопку
         self.call_down = 200
         self.last_click = 0
+        self.cage_distance = cage_distance
 
     def change_cords(self, x, y):
         self.rect.x = x
@@ -94,17 +95,17 @@ class Player(Sprite):
                                         mobs_count == 0 and self.selected:
                                     self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
                                     self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
-                                                                                                [character for character
-                                                                                                 in
-                                                                                                 self.level.sprites_arr[
-                                                                                                     self.row][
-                                                                                                     self.col][1]]))
+                                        [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
                         elif args[0].button == 3 and not self.selected:
                             # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
                             cell = self.level.get_cell_for_first_layer(args[0].pos)
-                            if cell is not None:
+                            # расстояние рассматривается по количеству кругов, поэтому учитываем диагонали
+                            if cell is not None and\
+                                    (cell[1] - self.row) ** 2 + \
+                                    (cell[0] - self.col) ** 2 <= 2 * self.cage_distance ** 2 and\
+                                    (cell[1] - self.row) ** 2 + (cell[0] - self.col) ** 2 > 2:
                                 staring_cell = cell[0] - 4, cell[1] - 4
                                 if cell is not None and self.coins > 0:
                                     self.coins -= 1
@@ -112,22 +113,8 @@ class Player(Sprite):
                                     Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
                                          self.level.all_sprites, self.level.cages)
 
-                # на колёсико мыши конец хода игрока
-                if args[0].button == 2:
-                    self.level.is_player_turn = False
-                    font = pygame.font.Font(None, 50)
-                    text = font.render("Enemies' move!", True, (100, 255, 100))
-                    text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                    text_y = 20
-                    self.level.screen.blit(text, (text_x, text_y))
-                    self.level.render()
-                    pygame.display.flip()
-                    ping_for_message = 10000000
-                    while ping_for_message != 0:
-                        ping_for_message -= 1
-
-                    self.level.screen.fill('#282828')
                 self.last_click = 0
+
             else:
                 self.last_click += 1000 // FPS
 

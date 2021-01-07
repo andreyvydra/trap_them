@@ -15,9 +15,9 @@ class Save:
 
     def get_level_and_map(self, screen):
         player_data, level_data, map_data = self.get_data()
-        level_map = Map(map_data[0])
-        level_map.width = map_data[1]
-        level_map.height = map_data[2]
+        level_map = Map(map_data[0], map_data[1])
+        level_map.width = map_data[2]
+        level_map.height = map_data[3]
         level = Level(level_map, screen)
         level.load_data(level_data)
         level.load_player(player_data)
@@ -53,7 +53,7 @@ class Save:
 
     def get_map_data(self, level):
         w, h = level.level_map.width, level.level_map.height
-        return level.level_map.path_map, w, h
+        return level.level_map.path_map, level.level_map.difficulty, w, h
 
     def get_player_data(self, level):
         player_data = {'coins': level.player.coins,

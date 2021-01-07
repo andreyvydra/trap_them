@@ -106,6 +106,9 @@ class Level:
         self.coins = pygame.sprite.Group()
         self.traps = pygame.sprite.Group()
         self.hearts = pygame.sprite.Group()
+        self.is_pressed_end_move_btn = False
+
+        self.manager = None
 
         self.is_player_turn = True
         self.game_over = False
@@ -123,6 +126,7 @@ class Level:
         self.coins.draw(self.screen)
         self.traps.draw(self.screen)
 
+        self.render_cage_cells()
         if not self.game_over:
             self.screen.blit(self.player.image, self.player.rect)
 
@@ -134,16 +138,34 @@ class Level:
         self.render_health()
         self.render_num_characters()
         self.render_mp()
+        self.manager.draw_ui(self.screen)
         if self.alpha_channel_for_lvl_number > 0:
             self.level_number_text.set_alpha(self.alpha_channel_for_lvl_number)
             self.alpha_channel_for_lvl_number -= 255 / FPS * 0.5
-            self.screen.blit(self.level_number_text, (100, 100))
+            x, y = CENTER_POINT[0] - self.level_number_text.get_width() // 2, 20
+            self.screen.blit(self.level_number_text, (x, y))
 
     def render_mp(self):
         for i in range(self.player.max_steps):
             if i + 1 <= self.player.steps:
                 pygame.draw.rect(self.screen, (15, 82, 186), (20 + (i * 60), 50, 60, 25))
             pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 50, 60, 25), 2)
+
+    def render_cage_cells(self):
+        if self.player.alive() and not self.player.selected and self.player.steps:
+            x = [-1, -1, 0, -1, 0, 1, 1, 1]
+            y = [-1, 0, -1, 1, 1, 0, 1, -1]
+            radius = 7
+            for col, row in zip(x, y):
+                for distance_x in range(1, self.player.cage_distance + 1):
+                    for distance_y in range(1, self.player.cage_distance + 1):
+                        if 0 <= self.player.col + col * distance_x < self.level_map.width and \
+                                0 <= self.player.row + row * distance_y < self.level_map.height and \
+                                (col * distance_x) ** 2 + (row * distance_y) ** 2 > 2:
+                                cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col * distance_x,
+                                                                                    self.player.row + row * distance_y))
+                                pygame.draw.circle(self.screen, ('#00E5DF'), (cur_x, cur_y), radius)
+
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
@@ -159,7 +181,7 @@ class Level:
             pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 20, 60, 25), 2)
 
     def render_players_moves(self):
-        if self.player.alive() and self.player.selected:
+        if self.player.alive() and self.player.selected and self.player.steps:
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
@@ -196,12 +218,30 @@ class Level:
     def update(self, *args, **kwargs):
         if not any(filter(lambda x: x.alive(), self.enemies)):
             self.game_over = True
+        td = args[1]
+        self.manager.update(td)
         if self.is_player_turn:
             self.all_sprites.update(*args, **kwargs)
+            if self.is_pressed_end_move_btn:
+                self.is_pressed_end_move_btn = False
+                self.is_player_turn = False
+                font = pygame.font.Font(None, 50)
+                text = font.render("Enemies' move!", True, (100, 255, 100))
+                text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                text_y = 20
+                self.screen.blit(text, (text_x, text_y))
+                self.render()
+                pygame.display.flip()
+                ping_for_message = 10000000
+                while ping_for_message != 0:
+                    ping_for_message -= 1
+
+                self.screen.fill('#282828')
         else:
             self.enemies.update()
             self.cages.update()
             self.traps.update()
+            self.player.steps = self.player.max_steps
             font = pygame.font.Font(None, 50)
             text = font.render("Your move!", True, (100, 255, 100))
             text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
@@ -216,7 +256,7 @@ class Level:
 
             self.screen.fill('#282828')
             self.is_player_turn = True
-            self.player.steps = self.player.max_steps
+            self.player.is_pressed_end_move_btn = False
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
