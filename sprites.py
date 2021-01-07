@@ -113,22 +113,8 @@ class Player(Sprite):
                                     Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
                                          self.level.all_sprites, self.level.cages)
 
-                # на колёсико мыши конец хода игрока
-                if args[0].button == 2:
-                    self.level.is_player_turn = False
-                    font = pygame.font.Font(None, 50)
-                    text = font.render("Enemies' move!", True, (100, 255, 100))
-                    text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                    text_y = 20
-                    self.level.screen.blit(text, (text_x, text_y))
-                    self.level.render()
-                    pygame.display.flip()
-                    ping_for_message = 10000000
-                    while ping_for_message != 0:
-                        ping_for_message -= 1
-
-                    self.level.screen.fill('#282828')
                 self.last_click = 0
+
             else:
                 self.last_click += 1000 // FPS
 

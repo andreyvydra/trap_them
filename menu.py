@@ -5,6 +5,7 @@ import pygame
 
 class Menu:
     """Класс, который упрощает работу с интерфейсами меню"""
+
     def __init__(self, manager, continue_btn=False, new_game_btn=False,
                  save_btn=False, load_btn=False,
                  back_to_menu_btn=False, quit_btn=False):
@@ -132,9 +133,9 @@ class UpgradeMenu:
 
     def add_first_upg_btn(self):
         first_upg_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                              BUTTON_SIZE),
-                                                    text='Увеличить hp на 1',
-                                                    manager=self.manager)
+                                                                               BUTTON_SIZE),
+                                                     text='Увеличить hp на 1',
+                                                     manager=self.manager)
         first_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
                                                       image_surface=pygame.image.load('sprites/+hp.png'),
                                                       manager=self.manager)
@@ -143,12 +144,12 @@ class UpgradeMenu:
 
     def add_second_upg_btn(self):
         second_upg_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                               BUTTON_SIZE),
-                                                     text='Увеличить mp на 1',
-                                                     manager=self.manager)
-        second_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-                                                      image_surface=pygame.image.load('sprites/+mp.png'),
+                                                                                BUTTON_SIZE),
+                                                      text='Увеличить mp на 1',
                                                       manager=self.manager)
+        second_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
+                                                       image_surface=pygame.image.load('sprites/+mp.png'),
+                                                       manager=self.manager)
         self.second_upg_btn = second_upg_btn
         self.second_upg_image = second_upg_image
 

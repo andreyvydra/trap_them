@@ -106,6 +106,9 @@ class Level:
         self.coins = pygame.sprite.Group()
         self.traps = pygame.sprite.Group()
         self.hearts = pygame.sprite.Group()
+        self.is_pressed_end_move_btn = False
+
+        self.manager = None
 
         self.is_player_turn = True
         self.game_over = False
@@ -135,10 +138,12 @@ class Level:
         self.render_health()
         self.render_num_characters()
         self.render_mp()
+        self.manager.draw_ui(self.screen)
         if self.alpha_channel_for_lvl_number > 0:
             self.level_number_text.set_alpha(self.alpha_channel_for_lvl_number)
             self.alpha_channel_for_lvl_number -= 255 / FPS * 0.5
-            self.screen.blit(self.level_number_text, (100, 100))
+            x, y = CENTER_POINT[0] - self.level_number_text.get_width() // 2, 20
+            self.screen.blit(self.level_number_text, (x, y))
 
     def render_mp(self):
         for i in range(self.player.max_steps):
@@ -213,8 +218,25 @@ class Level:
     def update(self, *args, **kwargs):
         if not any(filter(lambda x: x.alive(), self.enemies)):
             self.game_over = True
+        td = args[1]
+        self.manager.update(td)
         if self.is_player_turn:
             self.all_sprites.update(*args, **kwargs)
+            if self.is_pressed_end_move_btn:
+                self.is_pressed_end_move_btn = False
+                self.is_player_turn = False
+                font = pygame.font.Font(None, 50)
+                text = font.render("Enemies' move!", True, (100, 255, 100))
+                text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+                text_y = 20
+                self.screen.blit(text, (text_x, text_y))
+                self.render()
+                pygame.display.flip()
+                ping_for_message = 10000000
+                while ping_for_message != 0:
+                    ping_for_message -= 1
+
+                self.screen.fill('#282828')
         else:
             self.enemies.update()
             self.cages.update()
@@ -234,6 +256,7 @@ class Level:
 
             self.screen.fill('#282828')
             self.is_player_turn = True
+            self.player.is_pressed_end_move_btn = False
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
