@@ -31,7 +31,6 @@
          "misc":
          {
              "shape": "rounded_rectangle",
-             "shape_corner_radius": "15",
              "border_width": "2",
              "tool_tip_delay": "1.0",
              "text_horiz_alignment": "center",

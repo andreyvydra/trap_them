@@ -21,12 +21,20 @@ def game():
         level = Level(level_map, screen)
         level.load_sprites()
 
+    game_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    end_move_btn = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect((19, 80),
+                                                                               BUTTON_SIZE_2),
+                                                text='Закончить ход',
+                                                manager=game_manager)
+    level.manager = game_manager
+
     running = True
     is_pressed_escape = False
     game_music.set_volume(0.25)
     game_music.play(-1, 0, 10000)
 
     while running:
+        td = clock.tick(FPS) / 1000
         if level.game_over and not level.player.alive():
             game_music.stop()
             game_over_res = game_over()
@@ -85,15 +93,21 @@ def game():
         event = pygame.event.Event(0)
 
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 'quit'
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     is_pressed_escape = True
             if event.type == pygame.MOUSEBUTTONDOWN:
                 level.player.update(event)
-            if event.type == pygame.QUIT:
-                return 'quit'
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == end_move_btn:
+                        level.player.is_pressed_end_move_btn = True
 
-        level.update(event)
+            game_manager.process_events(event)
+
+        level.update(event, td)
         level.render()
 
         # Отрисовка сетки

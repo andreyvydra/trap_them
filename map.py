@@ -107,6 +107,8 @@ class Level:
         self.traps = pygame.sprite.Group()
         self.hearts = pygame.sprite.Group()
 
+        self.manager = None
+
         self.is_player_turn = True
         self.game_over = False
         self.player = None
@@ -134,10 +136,12 @@ class Level:
         self.render_health()
         self.render_num_characters()
         self.render_mp()
+        self.manager.draw_ui(self.screen)
         if self.alpha_channel_for_lvl_number > 0:
             self.level_number_text.set_alpha(self.alpha_channel_for_lvl_number)
             self.alpha_channel_for_lvl_number -= 255 / FPS * 0.5
-            self.screen.blit(self.level_number_text, (100, 100))
+            x, y = CENTER_POINT[0] - self.level_number_text.get_width() // 2, 20
+            self.screen.blit(self.level_number_text, (x, y))
 
     def render_mp(self):
         for i in range(self.player.max_steps):
@@ -196,6 +200,8 @@ class Level:
     def update(self, *args, **kwargs):
         if not any(filter(lambda x: x.alive(), self.enemies)):
             self.game_over = True
+        td = args[1]
+        self.manager.update(td)
         if self.is_player_turn:
             self.all_sprites.update(*args, **kwargs)
         else:
