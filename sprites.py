@@ -285,6 +285,7 @@ class Mob(Sprite):
                 self.level.player.health = max(self.level.player.health - self.damage, 0)
                 if self.level.player.health == 0:
                     self.level.game_over = True
+                    self.level.player.kill()
                 self.kill()
                 self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
                                                                             [character for character in
