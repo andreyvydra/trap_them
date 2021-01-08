@@ -127,10 +127,16 @@ class Level:
         self.traps.draw(self.screen)
 
         self.render_cage_cells()
-        if not self.game_over:
-            self.screen.blit(self.player.image, self.player.rect)
 
-        self.enemies.draw(self.screen)
+        for row in self.sprites_arr:
+            for cell in row:
+                enemies = cell[1]
+                if len(enemies):
+                    if enemies[0].__class__ == Player and not self.game_over:
+                        self.screen.blit(enemies[0].image, enemies[0].rect)
+                    elif enemies[0].__class__ != Player:
+                        self.screen.blit(enemies[0].image, enemies[0].rect)
+
         self.cages.draw(self.screen)
 
         self.render_number_of_coins()
