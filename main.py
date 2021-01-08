@@ -104,7 +104,7 @@ def game():
                 level.player.update(event)
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == end_move_btn:
+                    if event.ui_element == end_move_btn and all(map(lambda x: x.is_fallen, level.cages)):
                         level.is_pressed_end_move_btn = True
 
             game_manager.process_events(event)
