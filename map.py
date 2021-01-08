@@ -128,16 +128,22 @@ class Level:
 
         self.render_cage_cells()
 
-        for row in self.sprites_arr:
-            for cell in row:
+        cages = {(cage.col, cage.row): cage for cage in self.cages}
+
+        for row_n, row in enumerate(self.sprites_arr):
+            for col_n, cell in enumerate(row):
                 enemies = cell[1]
                 if len(enemies):
                     if enemies[0].__class__ == Player and not self.game_over:
                         self.screen.blit(enemies[0].image, enemies[0].rect)
                     elif enemies[0].__class__ != Player:
                         self.screen.blit(enemies[0].image, enemies[0].rect)
-
-        self.cages.draw(self.screen)
+                        if (enemies[0].col, enemies[0].row) in cages:
+                            cage = cages[(enemies[0].col, enemies[0].row)]
+                            self.screen.blit(cage.image, cage.rect)
+                    elif (row_n, col_n) in cages:
+                        cage = cages[(enemies[0].col, enemies[0].row)]
+                        self.screen.blit(cage.image, cage.rect)
 
         self.render_number_of_coins()
         self.render_players_moves()
