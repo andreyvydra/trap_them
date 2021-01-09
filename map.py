@@ -127,6 +127,7 @@ class Level:
         self.traps.draw(self.screen)
 
         self.render_cage_cells()
+        self.render_players_moves()
 
         cages = {(cage.col, cage.row): cage for cage in self.cages}
 
@@ -146,7 +147,6 @@ class Level:
                         self.screen.blit(cage.image, cage.rect)
 
         self.render_number_of_coins()
-        self.render_players_moves()
         self.render_health()
         self.render_num_characters()
         self.render_mp()
