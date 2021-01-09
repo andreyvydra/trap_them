@@ -323,7 +323,7 @@ if __name__ == '__main__':
     music = pygame.mixer.Sound('songs/main_menu.ogg')
     music.set_volume(0.25)
     music.play(-1, 0, 10000)
-    pygame.display.set_caption("'КУБЫ!'")
+    pygame.display.set_caption("Trap them!")
     screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
