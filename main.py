@@ -327,7 +327,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(SCREEN_SIZE, flags=pygame.FULLSCREEN)
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
-    main_menu = Menu(manager, continue_btn=True, new_game_btn=True)
+    main_menu = Menu(manager, continue_btn=True, new_game_btn=True, quit_btn=True)
     save = Save('saves/save.pickle')
     bg = pygame.image.load('bgs/menu_bg.jpg')
     bg = pygame.transform.scale(bg, SCREEN_SIZE)
