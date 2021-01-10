@@ -283,13 +283,18 @@ class Cage(Sprite):
     (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
             len(self.level.sprites_arr[self.row][self.col][1]) > 1):
             self.image = Cage.image.copy()
+            # для дальнейшей прорисовки нужно убрать клетку из массива
+            self.level.sprites_arr[self.row][self.col][1] = \
+                list(filter(lambda x: not isinstance(x, Cage),
+                            self.level.sprites_arr[self.row][self.col][1]))
             trapped_characters = self.level.sprites_arr[self.row][self.col][1]
             # для проигрывания анимации нужно выбрать один из спрайтов
             # все остальные просто убираются
             character_for_animation = None
-            if trapped_characters:
-                # просматриваем все спрайты на клетке
+            if trapped_characters and len(trapped_characters) >= 1:
                 for trapped_character in trapped_characters:
+                    # для проигрывания анимации нужно выбрать один из спрайтов
+                    # все остальные просто убираются
                     if not isinstance(trapped_character, Cage):
                         # выбираем для анимации один спрайт
                         if not character_for_animation:
