@@ -423,7 +423,7 @@ if __name__ == '__main__':
     music.set_volume(0.25)
     music.play(-1, 0, 10000)
     pygame.display.set_caption("'КУБЫ!'")
-    screen = pygame.display.set_mode(SCREEN_SIZE)
+    screen = pygame.display.set_mode(SCREEN_SIZE, flags=pygame.FULLSCREEN)
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
     main_menu = Menu(manager, continue_btn=True, new_game_btn=True,
