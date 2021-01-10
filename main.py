@@ -65,7 +65,6 @@ def game():
             level_map.load_map()
             level = Level(level_map, screen, number_of_level + 1)
             level.load_sprites()
-            save.save_game(level)
             level.player.max_health = max_health
             level.player.health = health
             level.player.max_steps = max_steps
@@ -73,6 +72,7 @@ def game():
             level.player.steps = max_steps
             level.player.cage_distance = cage_dis
             level.manager = game_manager
+            save.save_game(level)
         elif level.game_over and level.level_number == 10:
             ending()
 
