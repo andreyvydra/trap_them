@@ -192,7 +192,9 @@ class Player(Sprite):
                                     (cell[0] - self.col) ** 2 <= \
                                     2 * self.cage_distance ** 2 and\
                                     (cell[1] - self.row) ** 2 + \
-                                    (cell[0] - self.col) ** 2 > 2:
+                                    (cell[0] - self.col) ** 2 > 2  and \
+                                    all(list(map(lambda x: not isinstance(x, Cage),
+                                                 self.level.sprites_arr[cell[1]][cell[0]][1]))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
                                 if cell is not None and self.coins > 0:
                                     self.coins -= 1
