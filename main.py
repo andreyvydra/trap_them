@@ -395,6 +395,27 @@ def start_game():
     music.play(-1, 0, 10000)
 
 
+def make_db():
+    try:
+        cur.execute('''CREATE TABLE statistic (
+                       id    INTEGER PRIMARY KEY AUTOINCREMENT
+                                     UNIQUE
+                                      NOT NULL,
+                       title STRING  NOT NULL,
+                       value INTEGER NOT NULL
+                    );''')
+        cur.execute('''INSERT INTO statistic(title, value)
+                       VALUES ("Поймано членов мафии", 0),
+                       ("Собрано монет", 0),
+                       ("Потрачено здоровья", 0),
+                       ("Совершено действий", 0),
+                       ("Мест зачищено", 0),
+                       ("Использовано ловушек", 0)''')
+        con.commit()
+    except sqlite3.Error:
+        print('DB is done')
+
+
 if __name__ == '__main__':
     pygame.mixer.init()
     pygame.init()
@@ -417,6 +438,8 @@ if __name__ == '__main__':
     data_of_game = []
     con = sqlite3.connect('statistic.db')
     cur = con.cursor()
+    make_db()
+
     while mainloop:
         time_delta = clock.tick(FPS) / 1000.0
 
