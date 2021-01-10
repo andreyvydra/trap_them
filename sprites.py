@@ -13,6 +13,7 @@ class Sprite(pygame.sprite.Sprite):
         col(int): столбик спрайта
         rect(pygame.rect.Rect): прямоугольник, на котором располагается спрайт
     """
+
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(*groups)
         self.image = image.copy()
@@ -25,6 +26,7 @@ class Sprite(pygame.sprite.Sprite):
 
 class Block(Sprite):
     '''Класс блоков.'''
+
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(image, col, row, x, y, *groups)
 
@@ -66,7 +68,7 @@ class Floor(Block):
             result(bool): возвращает True,
              если точка лежит в верхнем прямоугольнике, иначе False
         '''
-        x, y = abs(self.top_rect.centerx - mouse_pos[0]),\
+        x, y = abs(self.top_rect.centerx - mouse_pos[0]), \
                abs(self.top_rect.centery - mouse_pos[1])
         b = self.top_rect.height / 2
         a = self.top_rect.width / 2
@@ -158,7 +160,7 @@ class Player(Sprite):
                     if self.last_click > self.call_down:
                         if args[0].button == 1:
                             cell = \
-                            self.level.get_cell_for_first_layer(args[0].pos)
+                                self.level.get_cell_for_first_layer(args[0].pos)
                             if cell is not None and \
                                     cell[0] == self.col and \
                                     cell[1] == self.row:
@@ -170,29 +172,30 @@ class Player(Sprite):
                                     [cell[0]][1])))
                                 # SECOND_LAYER не учитываем
                                 if cell is not None and \
-                                        abs(cell[0] - self.col)\
+                                        abs(cell[0] - self.col) \
                                         + abs(cell[1] - self.row) == 1 and \
                                         mobs_count == 0 and self.selected:
                                     self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
                                     self.level.sprites_arr[self.row][self.col][1] = \
-                                    list(filter(lambda x: x != self,
-                                    [character for character in
-                                     self.level.sprites_arr[self.row][self.col][1]]))
+                                        list(filter(lambda x: x != self,
+                                                    [character for character in
+                                                     self.level.sprites_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
+                                    self.level.events['done_moves'] += 1
                         elif args[0].button == 3 and not self.selected:
                             # cell хранит позицию на поле,
                             # а starting_cell для эффекта падения клетки
                             cell = \
-                            self.level.get_cell_for_first_layer(args[0].pos)
+                                self.level.get_cell_for_first_layer(args[0].pos)
                             # расстояние рассматривается по количеству кругов,
                             # поэтому учитываем диагонали
-                            if cell is not None and\
+                            if cell is not None and \
                                     (cell[1] - self.row) ** 2 + \
                                     (cell[0] - self.col) ** 2 <= \
-                                    2 * self.cage_distance ** 2 and\
+                                    2 * self.cage_distance ** 2 and \
                                     (cell[1] - self.row) ** 2 + \
-                                    (cell[0] - self.col) ** 2 > 2  and \
+                                    (cell[0] - self.col) ** 2 > 2 and \
                                     all(list(map(lambda x: not isinstance(x, Cage),
                                                  self.level.sprites_arr[cell[1]][cell[0]][1]))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
@@ -200,8 +203,9 @@ class Player(Sprite):
                                     self.coins -= 1
                                     self.steps -= 1
                                     Cage(self.level, *cell,
-                                *self.level.get_cords_for_block(staring_cell),
-                                     self.level.all_sprites, self.level.cages)
+                                         *self.level.get_cords_for_block(staring_cell),
+                                         self.level.all_sprites, self.level.cages)
+                                    self.level.events['used_traps'] += 1
 
                 self.last_click = 0
 
@@ -282,8 +286,8 @@ class Cage(Sprite):
             self.rect.y += self.top_rect_height
 
         elif self.level.sprites_arr[self.row][self.col][1] and \
-    (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
-            len(self.level.sprites_arr[self.row][self.col][1]) > 1):
+                (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
+                 len(self.level.sprites_arr[self.row][self.col][1]) > 1):
             self.image = Cage.image.copy()
             # для дальнейшей прорисовки нужно убрать клетку из массива
             self.level.sprites_arr[self.row][self.col][1] = \
@@ -324,6 +328,7 @@ class Cage(Sprite):
                            character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
                 character_for_animation.kill()
+                self.level.events['locked_up_mafia'] += 1
                 self.kill()
 
 
@@ -357,6 +362,7 @@ class Coin(Sprite):
                 self.level.player.row == self.row:
             self.pick_up_sound.play()
             self.level.player.coins += 1
+            self.level.events['picked_up_coins'] += 1
             self.kill()
         for enemy in self.level.enemies:
             if enemy.col == self.col and enemy.row == self.row:
@@ -451,6 +457,7 @@ class Mob(Sprite):
                     list(filter(lambda x: x != self,
                     [character for character in
                      self.level.sprites_arr[self.row][self.col][1]]))
+                self.level.events['health_down'] += 1
                 return
 
     def voln(self, x, y, x1, y1):
