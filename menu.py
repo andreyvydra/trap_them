@@ -4,7 +4,29 @@ import pygame
 
 
 class Menu:
-    """Класс, который упрощает работу с интерфейсами меню"""
+    """
+    Класс, который упрощает работу с интерфейсами меню
+
+    Attributes:
+        manager(pygame_gui.UIManager): менеджер
+        continue_btn(pygame_gui.elements.UIButton): кнопка продолжения
+        new_game_btn(pygame_gui.elements.UIButton): кнопка новой игры
+        save_btn(pygame_gui.elements.UIButton): сохранение игры
+        load_btn(pygame_gui.elements.UIButton): загрузка игры
+        back_to_menu_btn(pygame_gui.elements.UIButton:
+            вернуться в главное меню
+        quit_btn(pygame_gui.elements.UIButton): выход из игры
+        buttons(arr): массив со всеми кнопками
+
+    Methods:
+        set_coordinates_for_buttons(): установка координат кнопок
+        add_continue_btn(): добавление кнопки продолжения
+        add_new_game_btn(): добавление кнопки новой игры
+        add_save_btn(): добавление кнопки сохранения
+        add_load_btn(): добавление кнопки загрузки
+        add_back_to_menu_btn(): добавление кнопки возврата в главное меню
+        add_quit_btn(): добавление кнопки выхода из игры
+        """
 
     def __init__(self, manager, continue_btn=False, new_game_btn=False,
                  save_btn=False, load_btn=False,
@@ -89,10 +111,31 @@ class Menu:
 
 
 class UpgradeMenu:
+    '''
+    Класс выбора улучшения
 
-    def __init__(self, manager, save_btn=False,
-                 first_upg_btn=False, second_upg_btn=False, third_upg_btn=False,
-                 back_to_menu_btn=False, quit_btn=False):
+    Attributes:
+        manager(pygame_gui.UIManager): менеджер
+        first_upg_btn(pygame_gui.elements.UIButton): кнопка первого улучшения
+        second_upg_btn(pygame_gui.elements.UIButton): кнопка второго улучшения
+        third_upg_btn(pygame_gui.elements.UIButton): кнопка третьего улучшения
+        first_upg_image(pygame_gui.elements.UIImage): изображение первого
+            улучшения
+        second_upg_image(pygame_gui.elements.UIImage): изображение второго
+            улучшения
+        third_upg_image(pygame_gui.elements.UIImage): изображение третьего
+            улучшения
+        buttons(arr): массив со всеми кнопками
+
+    Methods:
+        set_coordinates_for_buttons(): установка координат кнопок
+        set_coordinates_for_upg_images(): установка координат для изображений
+        add_first_upg_btn(): добавление кнопки выбора первого улучшения
+        add_second_upg_btn(): добавление кнопки выбора второго улучшения
+        add_third_upg_btn(): добавление кнопки выбора третьего улучшения
+    '''
+    def __init__(self, manager, first_upg_btn=False,
+                 second_upg_btn=False, third_upg_btn=False):
 
         self.manager = manager
         self.first_upg_btn = None
@@ -163,24 +206,3 @@ class UpgradeMenu:
                                                        manager=self.manager)
         self.third_upg_btn = third_upg_btn
         self.third_upg_image = third_upg_image
-
-    def add_back_to_menu_btn(self):
-        back_to_menu_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                                     BUTTON_SIZE),
-                                                           text='Главное меню',
-                                                           manager=self.manager)
-        self.back_to_menu_btn = back_to_menu_button
-
-    def add_quit_btn(self):
-        quit_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                          BUTTON_SIZE),
-                                                text='Выйти из игры',
-                                                manager=self.manager)
-        self.quit_btn = quit_btn
-
-    def add_save_btn(self):
-        save_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                          BUTTON_SIZE),
-                                                text='Сохранить игру',
-                                                manager=self.manager)
-        self.save_btn = save_btn

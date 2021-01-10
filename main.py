@@ -279,7 +279,7 @@ def upgrades(level):
     upgrades_surface.set_alpha(100)
     upgrades_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
     menu = UpgradeMenu(upgrades_manager, first_upg_btn=True, second_upg_btn=True,
-                       quit_btn=True, third_upg_btn=True, back_to_menu_btn=True)
+                       third_upg_btn=True)
     running = True
 
     while running:
