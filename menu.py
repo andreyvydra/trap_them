@@ -8,7 +8,8 @@ class Menu:
 
     def __init__(self, manager, continue_btn=False, new_game_btn=False,
                  save_btn=False, load_btn=False,
-                 back_to_menu_btn=False, quit_btn=False):
+                 back_to_menu_btn=False, quit_btn=False,
+                 stat_btn=False):
 
         self.manager = manager
         self.continue_btn = None
@@ -17,6 +18,7 @@ class Menu:
         self.load_btn = None
         self.back_to_menu_btn = None
         self.quit_btn = None
+        self.stat_btn = None
 
         if continue_btn:
             self.add_continue_btn()
@@ -30,9 +32,11 @@ class Menu:
             self.add_back_to_menu_btn()
         if quit_btn:
             self.add_quit_btn()
+        if stat_btn:
+            self.add_stat_btn()
 
         self.buttons = [self.continue_btn, self.new_game_btn,
-                        self.save_btn, self.load_btn,
+                        self.save_btn, self.load_btn, self.stat_btn,
                         self.back_to_menu_btn, self.quit_btn]
 
         self.set_coordinates_for_buttons()
@@ -86,6 +90,13 @@ class Menu:
                                                 text='Выйти из игры',
                                                 manager=self.manager)
         self.quit_btn = quit_btn
+
+    def add_stat_btn(self):
+        stat_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
+                                                                          BUTTON_SIZE),
+                                                text='Статистика',
+                                                manager=self.manager)
+        self.stat_btn = stat_btn
 
 
 class UpgradeMenu:

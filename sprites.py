@@ -98,6 +98,7 @@ class Player(Sprite):
                                         [character for character in self.level.sprites_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
+                                    self.level.events['done_moves'] += 1
                         elif args[0].button == 3 and not self.selected:
                             # cell хранит позицию на поле, а starting_cell служит для эффекта падения клетки
                             cell = self.level.get_cell_for_first_layer(args[0].pos)
@@ -112,6 +113,7 @@ class Player(Sprite):
                                     self.steps -= 1
                                     Cage(self.level, *cell, *self.level.get_cords_for_block(staring_cell),
                                          self.level.all_sprites, self.level.cages)
+                                    self.level.events['used_traps'] += 1
 
                 self.last_click = 0
 
@@ -199,6 +201,7 @@ class Cage(Sprite):
                         pygame.display.flip()
                     timer += 1
                 character_for_animation.kill()
+                self.level.events['locked_up_mafia'] += 1
                 self.kill()
                 row, col = character_for_animation.row, character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
@@ -219,6 +222,7 @@ class Coin(Sprite):
         if self.level.player.col == self.col and self.level.player.row == self.row:
             self.pick_up_sound.play()
             self.level.player.coins += 1
+            self.level.events['picked_up_coins'] += 1
             self.kill()
         for enemy in self.level.enemies:
             if enemy.col == self.col and enemy.row == self.row:
@@ -287,6 +291,7 @@ class Mob(Sprite):
                     self.level.game_over = True
                     self.level.player.kill()
                 self.kill()
+                self.level.events['health_down'] += 1
                 self.level.sprites_arr[self.row][self.col][1] = list(filter(lambda x: x != self,
                                                                             [character for character in
                                                                              self.level.sprites_arr[self.row][self.col][

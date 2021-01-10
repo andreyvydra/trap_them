@@ -109,6 +109,12 @@ class Level:
         self.is_pressed_end_move_btn = False
 
         self.manager = None
+        self.events = {'picked_up_coins': 0,
+                       'locked_up_mafia': 0,
+                       'health_down': 0,
+                       'done_moves': 0,
+                       'used_traps': 0,
+                       'level_complete': 0}
 
         self.is_player_turn = True
         self.game_over = False
@@ -177,7 +183,6 @@ class Level:
                                 cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col * distance_x,
                                                                                     self.player.row + row * distance_y))
                                 pygame.draw.circle(self.screen, ('#00E5DF'), (cur_x, cur_y), radius)
-
 
     def render_number_of_coins(self):
         text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
@@ -269,6 +274,9 @@ class Level:
             self.screen.fill('#282828')
             self.is_player_turn = True
             self.player.is_pressed_end_move_btn = False
+
+    def get_events(self):
+        return self.events
 
     def load_sprites(self):
         # Подгрузка спрайтов по отдельным layer, соответственно нашей карте

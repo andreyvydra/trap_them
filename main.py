@@ -1,3 +1,5 @@
+import sqlite3
+
 import pygame
 import pygame_gui
 import pickle
@@ -42,11 +44,14 @@ def game():
                 level_map, level = save.get_level_and_map(screen)
                 level.manager = game_manager
             if game_over_res == 'quit':
+                update_db(level)
                 return 'quit'
             elif game_over_res == 'quit_to_menu':
+                update_db(level)
                 return
             game_music.play(-1, 0, 10000)
         elif level.game_over and level.level_number != 10:
+            update_db(level, level_complete=True)
             number_of_level = level.level_number
             upgrades_res = upgrades(level)
             max_health, health, max_steps, coins, cage_dis = level.player.max_health, \
@@ -74,14 +79,17 @@ def game():
             level.manager = game_manager
             save.save_game(level)
         elif level.game_over and level.level_number == 10:
+            update_db(level, level_complete=True)
             ending()
 
         if is_pressed_escape:
             game_music.stop()
             pause_res = pause(level)
             if pause_res == 'quit':
+                update_db(level)
                 return 'quit'
             elif pause_res == 'quit_to_menu':
+                update_db(level)
                 return
             elif pause_res == 'continue':
                 is_pressed_escape = False
@@ -117,6 +125,31 @@ def game():
         #    pygame.draw.rect(screen, (255, 255, 255), rect.top_rect, 1)
 
         pygame.display.flip()
+
+
+def update_db(level, level_complete=False):
+    events = level.get_events()
+    if level_complete:
+        events['level_complete'] += 1
+    cur.execute(f'''UPDATE statistic
+                    SET value = value + {events['locked_up_mafia']}
+                    WHERE id=1''').fetchall()
+    cur.execute(f'''UPDATE statistic
+                    SET value = value + {events['picked_up_coins']}
+                    WHERE id=2''').fetchall()
+    cur.execute(f'''UPDATE statistic
+                    SET value = value + {events['health_down']}
+                    WHERE id=3''').fetchall()
+    cur.execute(f'''UPDATE statistic
+                    SET value = value + {events['done_moves']}
+                    WHERE id=4''').fetchall()
+    cur.execute(f'''UPDATE statistic
+                    SET value = value + {events['level_complete']}
+                    WHERE id=5''').fetchall()
+    cur.execute(f'''UPDATE statistic
+                    SET value = value + {events['used_traps']}
+                    WHERE id=6''').fetchall()
+    con.commit()
 
 
 def pre_game_menu():
@@ -309,6 +342,51 @@ def upgrades(level):
         pygame.display.flip()
 
 
+def show_statistic():
+    running = True
+    show_stat_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    back_rect = pygame.Rect((20, 20), BUTTON_SIZE)
+    back_btn = pygame_gui.elements.ui_button.UIButton(relative_rect=back_rect,
+                                                      manager=show_stat_manager,
+                                                      text='Назад')
+    stat_data = cur.execute('''SELECT title,
+                                value from statistic''').fetchall()
+    font = pygame.font.Font(None, 40)
+    height_px = 28
+    strings = pygame.sprite.Group()
+    margin = 20
+    y = SCREEN_SIZE[1] // 2 - len(stat_data) / 2 * height_px - len(stat_data) / 2 * margin
+    for i, stat in enumerate(stat_data):
+        text = font.render(f'{stat[0]}: {str(stat[1])}', True, (153, 102, 0))
+        text_w, text_h = text.get_width(), text.get_height()
+        cur_x = SCREEN_SIZE[0] // 2 - text.get_width() // 2
+        cur_y = y + i * text.get_height() + (margin * i)
+        sprite = pygame.sprite.Sprite(strings)
+        sprite.image = text
+        sprite.rect = pygame.Rect((cur_x, cur_y), (text_w, text_h))
+
+    while running:
+        screen.fill('#282828')
+        td = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == back_btn:
+                        return 'first'
+
+            show_stat_manager.process_events(event)
+
+        show_stat_manager.update(td)
+        show_stat_manager.draw_ui(screen)
+
+        strings.draw(screen)
+
+        pygame.display.flip()
+
+
 def start_game():
     music.stop()
     res = game()
@@ -324,10 +402,11 @@ if __name__ == '__main__':
     music.set_volume(0.25)
     music.play(-1, 0, 10000)
     pygame.display.set_caption("'КУБЫ!'")
-    screen = pygame.display.set_mode(SCREEN_SIZE, flags=pygame.FULLSCREEN)
+    screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
-    main_menu = Menu(manager, continue_btn=True, new_game_btn=True, quit_btn=True)
+    main_menu = Menu(manager, continue_btn=True, new_game_btn=True,
+                     quit_btn=True, stat_btn=True)
     save = Save('saves/save.pickle')
     bg = pygame.image.load('bgs/menu_bg.jpg')
     bg = pygame.transform.scale(bg, SCREEN_SIZE)
@@ -336,6 +415,8 @@ if __name__ == '__main__':
     mainloop = True
     msg = ''
     data_of_game = []
+    con = sqlite3.connect('statistic.db')
+    cur = con.cursor()
     while mainloop:
         time_delta = clock.tick(FPS) / 1000.0
 
@@ -366,6 +447,8 @@ if __name__ == '__main__':
                         msg = 'new_game'
                     if event.ui_element == main_menu.quit_btn:
                         sys.exit()
+                    if event.ui_element == main_menu.stat_btn:
+                        show_statistic()
 
             manager.process_events(event)
         screen.blit(bg, (0, 0))
