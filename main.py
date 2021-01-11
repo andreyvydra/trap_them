@@ -1,3 +1,5 @@
+import sqlite3
+
 import pygame
 import pygame_gui
 import pickle
@@ -6,15 +8,22 @@ from settings import *
 from menu import *
 from save import *
 import sys
-import sqlite3
 
 
 def game():
+    """
+    Функция игры, где происходит обновление и рендеринг
+    уровня, и обработка некоторых событий.
+
+    Return:
+        signal (str or None): Сигнал-сообщение для обработки эвента
+    """
+
     # Если в меню была нажата кнопка продолжить игру, то
     # level_map и level просто подгружается, а если нет, то
     # создание карты по дефолту
     game_music = pygame.mixer.Sound('songs/gameplay.ogg')
-    if msg == 'continue':
+    if msg_for_starting == 'continue':
         level_map, level = save.get_level_and_map(screen)
     else:
         level_map = Map('map', difficulty=data_of_game[0])
@@ -22,11 +31,13 @@ def game():
         level = Level(level_map, screen)
         level.load_sprites()
 
+    # Добавление кнопки 'закончить ход' в менеджер уровня
     game_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
-    end_move_btn = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect((19, 80),
-                                                                               BUTTON_SIZE_2),
-                                                text='Закончить ход',
-                                                manager=game_manager)
+    end_move_btn = pygame_gui.elements. \
+        UIButton(relative_rect=pygame.rect.Rect((19, 80),
+                                                BUTTON_SIZE_2),
+                 text='Закончить ход',
+                 manager=game_manager)
     level.manager = game_manager
 
     running = True
@@ -36,6 +47,8 @@ def game():
 
     while running:
         td = clock.tick(FPS) / 1000
+
+        # Проверки на состояние уровня
         if level.game_over and not level.player.alive():
             game_music.stop()
             game_over_res = game_over()
@@ -49,15 +62,18 @@ def game():
                 update_db(level)
                 return
             game_music.play(-1, 0, 10000)
+
         elif level.game_over and level.level_number != 10:
             update_db(level, level_complete=True)
+
             number_of_level = level.level_number
-            upgrades_res = upgrades(level)
-            max_health, health, max_steps, coins, cage_dis = level.player.max_health, \
-                                                             level.player.health, \
-                                                             level.player.max_steps, \
-                                                             level.player.coins, \
-                                                             level.player.cage_distance
+            upgrades_res = upgrades()
+            max_health = level.player.max_health
+            health = level.player.health
+            max_steps = level.player.max_steps
+            coins = level.player.coins
+            cage_dis = level.player.cage_distance
+
             if upgrades_res == 'first':
                 health += 1
                 max_health += 1
@@ -65,6 +81,7 @@ def game():
                 max_steps += 1
             elif upgrades_res == 'third':
                 cage_dis += 1
+
             level_map = Map('map')
             level_map.load_map()
             level = Level(level_map, screen, number_of_level + 1)
@@ -77,10 +94,12 @@ def game():
             level.player.cage_distance = cage_dis
             level.manager = game_manager
             save.save_game(level)
+
         elif level.game_over and level.level_number == 10:
             update_db(level, level_complete=True)
             ending()
 
+        # Обработка нажатия на escape
         if is_pressed_escape:
             game_music.stop()
             pause_res = pause(level)
@@ -111,7 +130,11 @@ def game():
                 level.player.update(event)
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == end_move_btn and all(map(lambda x: x.is_fallen, level.cages)):
+                    # В проверке присутствует проверка на падение клетки для
+                    # того, чтобы исключить возможность делать ходы,
+                    # до того как клетка упадёт на моба
+                    if event.ui_element == end_move_btn and \
+                            all(map(lambda x: x.is_fallen, level.cages)):
                         level.is_pressed_end_move_btn = True
 
             game_manager.process_events(event)
@@ -127,6 +150,17 @@ def game():
 
 
 def update_db(level, level_complete=False):
+    """
+    Функция обновления статистики в базе данных
+
+    Arguments:
+        level (Level): уровень, в котором был основной gameplay
+        level_complete (bool): флаг, указывающий на конец уровня
+
+    Return:
+        signal (str or None): Сигнал-сообщение для обработки эвента
+    """
+
     events = level.get_events()
     if level_complete:
         events['level_complete'] += 1
@@ -152,36 +186,50 @@ def update_db(level, level_complete=False):
 
 
 def pre_game_menu():
-    pre_game_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    """
+    Функция предигрового меню с выбором сложности
+
+    Return:
+        signal (str or None): Сигнал-сообщение для обработки эвента
+        data (list): Данные, собранные из этого игрового меню
+    """
+    pre_game_manager = pygame_gui.UIManager(SCREEN_SIZE,
+                                            'themes/theme.json')
     btn_width, btn_height = 150, 50
 
-    elements = [1, [1, 1]]
+    # Алгоритм по созданию прямоугольников под сетку (elements)
+    elements = [None, [None, None]]
     y = len(elements) / 2 * btn_height
     for i, elem in enumerate(elements):
         if elem.__class__ == list:
             x = len(elem) / 2 * btn_width
             for j, item in enumerate(elem):
-                cur_x, cur_y = CENTER_POINT[0] - x + j * btn_width, CENTER_POINT[1] - y + i * btn_height
+                cur_x = CENTER_POINT[0] - x + j * btn_width
+                cur_y = CENTER_POINT[1] - y + i * btn_height
                 rect = pygame.Rect((cur_x, cur_y), (btn_width, btn_height))
                 elements[i][j] = rect
         else:
-            cur_x, cur_y = CENTER_POINT[0] - btn_width, CENTER_POINT[1] - y + i * btn_height
+            cur_x = CENTER_POINT[0] - btn_width
+            cur_y = CENTER_POINT[1] - y + i * btn_height
             rect = pygame.Rect((cur_x, cur_y), (btn_width * 2, btn_height))
             elements[i] = rect
 
-    difficulty_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(options_list=['Низкий', 'Средний'],
-                                                                           starting_option='Низкий',
-                                                                           relative_rect=elements[0],
-                                                                           manager=pre_game_manager,
-                                                                           )
+    difficulty_menu = pygame_gui.elements.ui_drop_down_menu. \
+        UIDropDownMenu(options_list=['Низкий', 'Средний'],
+                       starting_option='Низкий',
+                       relative_rect=elements[0],
+                       manager=pre_game_manager,
+                       )
 
-    start_game = pygame_gui.elements.ui_button.UIButton(manager=pre_game_manager,
-                                                        relative_rect=elements[1][1],
-                                                        text='Начать игру')
+    start_game_btn = pygame_gui.elements.ui_button. \
+        UIButton(manager=pre_game_manager,
+                 relative_rect=elements[1][1],
+                 text='Начать игру')
 
-    back_to_menu = pygame_gui.elements.ui_button.UIButton(manager=pre_game_manager,
-                                                          relative_rect=elements[1][0],
-                                                          text='Выйти в меню')
+    back_to_menu_btn = pygame_gui.elements.ui_button. \
+        UIButton(manager=pre_game_manager,
+                 relative_rect=elements[1][0],
+                 text='Выйти в меню')
 
     running = True
     difficulties = {'Низкий': 1,
@@ -204,9 +252,11 @@ def pre_game_menu():
                     if event.ui_element == difficulty_menu:
                         difficulty = difficulties[event.text]
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == start_game:
+                    if event.ui_element == start_game_btn:
+                        # В будущем вместо [difficulty] будет список
+                        # с данными, которые будут собираться из этого меню
                         return [difficulty]
-                    if event.ui_element == back_to_menu:
+                    if event.ui_element == back_to_menu_btn:
                         return 'quit_to_menu'
 
             pre_game_manager.process_events(event)
@@ -218,7 +268,14 @@ def pre_game_menu():
 
 
 def pause(level):
+    """
+    Функция меню паузы
+
+    Return:
+        signal (str or None): Сигнал-сообщение для обработки эвента
+    """
     pause_surface = pygame.surface.Surface(SCREEN_SIZE)
+    # Устанавливаем альфа канал на 100 для прозрачности
     pause_surface.set_alpha(100)
     pause_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
     menu = Menu(pause_manager, continue_btn=True, back_to_menu_btn=True,
@@ -257,6 +314,8 @@ def pause(level):
 
 
 def ending():
+    """Функция отображения финального экрана"""
+
     font = pygame.font.Font(None, 70)
     text = font.render('Вы прошли нашу игру, спасибо!', True, (255, 0, 255))
     text_w = text.get_width()
@@ -275,9 +334,17 @@ def ending():
 
 
 def game_over():
+    """
+    Функция отображения экрана при проигрыше
+
+    Return:
+        signal (str or None): Сигнал-сообщение для обработки эвента
+    """
+
     game_over_surface = pygame.surface.Surface(SCREEN_SIZE)
     game_over_surface.set_alpha(100)
-    game_over_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    game_over_manager = pygame_gui.UIManager(SCREEN_SIZE,
+                                             'themes/theme.json')
     menu = Menu(game_over_manager, back_to_menu_btn=True,
                 quit_btn=True, load_btn=True)
     running = True
@@ -306,12 +373,19 @@ def game_over():
         pygame.display.flip()
 
 
-def upgrades(level):
+def upgrades():
+    """
+    Функция для отображения апгрейдов и их выбора игроком
+
+    Return:
+        signal (str or None): Сигнал-сообщение для обработки эвента
+    """
     upgrades_surface = pygame.surface.Surface(SCREEN_SIZE)
     upgrades_surface.set_alpha(100)
-    upgrades_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
-    menu = UpgradeMenu(upgrades_manager, first_upg_btn=True, second_upg_btn=True,
-                       third_upg_btn=True)
+    upgrades_manager = pygame_gui.UIManager(SCREEN_SIZE,
+                                            'themes/theme.json')
+    menu = UpgradeMenu(upgrades_manager, first_upg_btn=True,
+                       second_upg_btn=True, third_upg_btn=True)
     running = True
 
     while running:
@@ -342,24 +416,41 @@ def upgrades(level):
 
 
 def show_statistic():
+    """
+    Функция для отображения статистики игры
+    """
+
     running = True
-    show_stat_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+
+    show_stat_manager = pygame_gui. \
+        UIManager(SCREEN_SIZE, 'themes/theme.json')
+
     back_rect = pygame.Rect((20, 20), BUTTON_SIZE)
-    back_btn = pygame_gui.elements.ui_button.UIButton(relative_rect=back_rect,
-                                                      manager=show_stat_manager,
-                                                      text='Назад')
+
+    back_btn = pygame_gui.elements.ui_button. \
+        UIButton(relative_rect=back_rect,
+                 manager=show_stat_manager,
+                 text='Назад')
+
     stat_data = cur.execute('''SELECT title,
                                 value from statistic''').fetchall()
+
     font = pygame.font.Font(None, 40)
+    # Высота текста в px
     height_px = 28
-    strings = pygame.sprite.Group()
     margin = 20
-    y = SCREEN_SIZE[1] // 2 - len(stat_data) / 2 * height_px - len(stat_data) / 2 * margin
+    strings = pygame.sprite.Group()
+
+    y = SCREEN_SIZE[1] // 2 - len(stat_data) / 2 * \
+        height_px - len(stat_data) / 2 * margin
+
     for i, stat in enumerate(stat_data):
-        text = font.render(f'{stat[0]}: {str(stat[1])}', True, (153, 102, 0))
+        text = font.render(f'{stat[0]}: {str(stat[1])}',
+                           True, (153, 102, 0))
         text_w, text_h = text.get_width(), text.get_height()
         cur_x = SCREEN_SIZE[0] // 2 - text.get_width() // 2
         cur_y = y + i * text.get_height() + (margin * i)
+
         sprite = pygame.sprite.Sprite(strings)
         sprite.image = text
         sprite.rect = pygame.Rect((cur_x, cur_y), (text_w, text_h))
@@ -374,7 +465,7 @@ def show_statistic():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == back_btn:
-                        return 'first'
+                        return
 
             show_stat_manager.process_events(event)
 
@@ -387,14 +478,17 @@ def show_statistic():
 
 
 def start_game():
+    """Функция для запуска игры"""
     music.stop()
-    res = game()
-    if res == 'quit':
+    result = game()
+    # Выход из игры
+    if result == 'quit':
         sys.exit()
     music.play(-1, 0, 10000)
 
 
 def make_db():
+    """Функция создания базы данных"""
     try:
         cur.execute('''CREATE TABLE statistic (
                        id    INTEGER PRIMARY KEY AUTOINCREMENT
@@ -416,24 +510,33 @@ def make_db():
 
 
 if __name__ == '__main__':
+    # Инициализация всего и вся
     pygame.mixer.init()
     pygame.init()
+
     music = pygame.mixer.Sound('songs/main_menu.ogg')
     music.set_volume(0.25)
     music.play(-1, 0, 10000)
-    pygame.display.set_caption("Trap them!")
-    screen = pygame.display.set_mode(SCREEN_SIZE)
+
+    pygame.display.set_caption("'КУБЫ!'")
+    screen = pygame.display.set_mode(SCREEN_SIZE, flags=pygame.FULLSCREEN)
+
     clock = pygame.time.Clock()
+
     manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
     main_menu = Menu(manager, continue_btn=True, new_game_btn=True,
                      quit_btn=True, stat_btn=True)
+
     save = Save('saves/save.pickle')
+
     bg = pygame.image.load('bgs/menu_bg.jpg')
     bg = pygame.transform.scale(bg, SCREEN_SIZE)
+
     is_button_game_pressed = False
     is_button_new_game_pressed = False
     mainloop = True
-    msg = ''
+
+    msg_for_starting = ''
     data_of_game = []
     con = sqlite3.connect('statistic.db')
     cur = con.cursor()
@@ -446,7 +549,7 @@ if __name__ == '__main__':
             start_game()
         if is_button_new_game_pressed:
             res = pre_game_menu()
-            if res.__class__ == list:
+            if res != 'quit_to_menu':
                 data_of_game = res
                 start_game()
 
@@ -463,10 +566,10 @@ if __name__ == '__main__':
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == main_menu.continue_btn:
                         is_button_game_pressed = True
-                        msg = 'continue'
+                        msg_for_starting = 'continue'
                     if event.ui_element == main_menu.new_game_btn:
                         is_button_new_game_pressed = True
-                        msg = 'new_game'
+                        msg_for_starting = 'new_game'
                     if event.ui_element == main_menu.quit_btn:
                         sys.exit()
                     if event.ui_element == main_menu.stat_btn:
