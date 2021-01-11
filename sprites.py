@@ -1,6 +1,7 @@
 import pygame
 from collections import deque
 from settings import *
+from math import hypot
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -173,11 +174,12 @@ class Player(Sprite):
                                         abs(cell[0] - self.col)\
                                         + abs(cell[1] - self.row) == 1 and \
                                         mobs_count == 0 and self.selected:
-                                    self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
-                                    self.level.sprites_arr[self.row][self.col][1] = \
+                                    s_arr = self.level.sprites_arr
+                                    s_arr[cell[1]][cell[0]][1].append(self)
+                                    s_arr[self.row][self.col][1] = \
                                     list(filter(lambda x: x != self,
                                     [character for character in
-                                     self.level.sprites_arr[self.row][self.col][1]]))
+                                     s_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
                         elif args[0].button == 3 and not self.selected:
@@ -187,14 +189,16 @@ class Player(Sprite):
                             self.level.get_cell_for_first_layer(args[0].pos)
                             # расстояние рассматривается по количеству кругов,
                             # поэтому учитываем диагонали
-                            if cell is not None and\
-                                    (cell[1] - self.row) ** 2 + \
-                                    (cell[0] - self.col) ** 2 <= \
-                                    2 * self.cage_distance ** 2 and\
-                                    (cell[1] - self.row) ** 2 + \
-                                    (cell[0] - self.col) ** 2 > 2  and \
-                                    all(list(map(lambda x: not isinstance(x, Cage),
-                                                 self.level.sprites_arr[cell[1]][cell[0]][1]))):
+                            row_check = cell[1] - self.row
+                            col_check = cell[0] - self.col
+                            check_cage_dist = 2 * self.cage_distance ** 2
+                            chosen_cell = \
+                                self.level.sprites_arr[cell[1]][cell[0]]
+                            if (cell is not None and
+                            hypot(row_check, col_check) <= check_cage_dist and
+                            hypot(row_check, col_check) > 2 and
+                            all(list(map(lambda x: not isinstance(x, Cage),
+                            chosen_cell[1])))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
                                 if cell is not None and self.coins > 0:
                                     self.coins -= 1
@@ -260,30 +264,32 @@ class Cage(Sprite):
 
     def update(self, *args, **kwargs):
         '''Update спрайта клетки'''
+        trapped_characters_cell = \
+            self.level.sprites_arr[self.row][self.col][1]
         if not self.is_fallen:
             self.level.cages.add(self)
             self.rect.y -= self.top_rect_height
-            if self.level.sprites_arr[self.row][self.col][1]:
+            if trapped_characters_cell[1]:
                 self.rect.y += self.velocity // FPS
-                floor = self.level.sprites_arr[self.row][self.col][0]
+                floor = trapped_characters_cell[0]
                 if self.rect.colliderect(floor.rect):
                     self.rect.y -= self.velocity // FPS
                     self.is_fallen = True
 
             else:
-                block = self.level.sprites_arr[self.row][self.col][0]
+                block = trapped_characters_cell[0]
                 self.rect.y = block.rect.y - self.image.get_height()
                 self.is_fallen = True
                 self.kill()
                 self.level.traps.add(self)
                 self.level.all_sprites.add(self)
                 self.image = Cage.trap_image.copy()
-                self.level.sprites_arr[self.row][self.col][1].append(self)
+                trapped_characters_cell[1].append(self)
             self.rect.y += self.top_rect_height
 
-        elif self.level.sprites_arr[self.row][self.col][1] and \
-    (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
-            len(self.level.sprites_arr[self.row][self.col][1]) > 1):
+        elif trapped_characters_cell[1] and \
+    (not isinstance(trapped_characters_cell[1][0], Cage) or
+            len(trapped_characters_cell[1]) > 1):
             self.image = Cage.image.copy()
             # для дальнейшей прорисовки нужно убрать клетку из массива
             self.level.sprites_arr[self.row][self.col][1] = \
@@ -301,7 +307,8 @@ class Cage(Sprite):
                         # выбираем для анимации один спрайт
                         if not character_for_animation:
                             character_for_animation = trapped_character
-                            self.level.player.coins += character_for_animation.coins
+                            self.level.player.coins += \
+                                character_for_animation.coins
                             continue
                         # остальные спрайты просто убиваем
                         trapped_character.kill()
@@ -323,6 +330,12 @@ class Cage(Sprite):
                 row, col = character_for_animation.row, \
                            character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
+                # так как игрок может быть один на клетке,
+                # можно проверять только спрайт для анимации
+                if isinstance(character_for_animation, Player):
+                    self.level.player.health = 0
+                    self.level.game_over = True
+
                 character_for_animation.kill()
                 self.kill()
 
@@ -407,38 +420,42 @@ class Mob(Sprite):
             # а max исключает вариант при отрицательном перемещении
             # min исключает ход правее/выше последней ячейк
             if self.level.difficulty == 1 or not path:
-                delta_row, delta_col = (max(min(self.target.row - self.row,
-                                                self.step),
-                                            -self.step)
-                                        if self.target.row != self.row else 0,
-                max(min(self.level.player.col - self.col, self.step),
-                    -self.step) if self.level.player.col != self.col
-                                        else 0)
+                delta_row, delta_col = (max(
+                    min(self.target.row - self.row, self.step), -self.step)
+                if self.target.row != self.row else 0,
+                max(
+                    min(self.target.col - self.col, self.step), -self.step)
+                if self.level.player.col != self.col else 0)
 
                 # также на мирном уровне сложности delta_row обнуляется,
                 # при разнице в обеих координатах
                 if abs(delta_col) + abs(delta_row) > 1:
                     delta_row = 0
 
+                new_row = self.row + delta_row
+                new_col = self.col + delta_col
+
                 # далее проверяем получившиеся row и col,
                 # max исключает ход левее/ниже первой ячейки, а
-                row = min(max(self.row + delta_row, 0),
-                          self.level.level_map.height - 1)
-                col = min(max(self.col + delta_col, 0),
-                          self.level.level_map.width - 1)
+                row = min(
+                    max(new_row, 0), self.level.level_map.height - 1)
+                col = min(
+                    max(new_col, 0), self.level.level_map.width - 1)
 
                 cells = [(col, row)]
 
-            self.level.sprites_arr[self.row][self.col][1] =\
+            cur_cell = self.level.sprites_arr[self.row][self.col]
+            cur_cell[1] =\
                 list(filter(lambda x: x != self,
                 [character for character in
-                self.level.sprites_arr[self.row][self.col][1]]))
+                cur_cell[1]]))
+
             for cell in cells:
                 self.move(cell)
 
             # в этом случае SECOND_LAYER не нужно учитывать
-            self.level.sprites_arr[self.row][self.col][1].append(self)
-            block = self.level.sprites_arr[self.row][self.col][0]
+            cur_cell[1].append(self)
+            block = cur_cell[0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
                 self.level.player.health = \
@@ -447,10 +464,10 @@ class Mob(Sprite):
                     self.level.game_over = True
                     self.level.player.kill()
                 self.kill()
-                self.level.sprites_arr[self.row][self.col][1] = \
+                cur_cell[1] = \
                     list(filter(lambda x: x != self,
                     [character for character in
-                     self.level.sprites_arr[self.row][self.col][1]]))
+                     cur_cell[1]]))
                 return
 
     def voln(self, x, y, x1, y1):
@@ -473,9 +490,10 @@ class Mob(Sprite):
         for row in range(self.level.level_map.height):
             board.append([])
             for col in range(self.level.level_map.width):
+                cur_cell = self.level.sprites_arr[row][col]
                 board[row].append([-1, (row, col)]
-                                  if self.level.sprites_arr[row][col][1] and
-                    isinstance(self.level.sprites_arr[row][col][1][0], Cage)
+                                  if cur_cell[1] and
+                    isinstance(cur_cell[1][0], Cage)
                     else [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
@@ -517,16 +535,17 @@ class Mob(Sprite):
             for delta_row, delta_col in zip(delta_y, delta_x):
                 if 0 <= delta_row + row < self.level.level_map.height and \
                         0 <= delta_col + col < self.level.level_map.width:
-                    if board[row + delta_row][col + delta_col][0] >\
-                            board[row][col][0] + 1 and \
-                            (board[row + delta_row][col + delta_col][0]
-                             != -1):
+                    next_row = delta_row + row
+                    next_col = delta_col + col
+                    if (board[next_row][next_col][0] > board[row][col][0] + 1
+                            and board[next_row][next_col][0] != -1):
+
                         # сохраняем предыдущую ячейку, вместе с расстоянием
-                        board[row + delta_row][col + delta_col] = \
-                            [board[row][col][0] + 1, (row, col)]
+                        board[next_row][next_col] = [board[row][col][0] + 1,
+                                                     (row, col)]
                         # если расстояние для текущй клетки обновлено,
                         # нужно пройти по всем соседей текущей клетки
-                        queue.append((row + delta_row, col + delta_col))
+                        queue.append((next_row, next_col))
         return board
 
     def move(self, cell):

@@ -68,43 +68,43 @@ class Menu:
             btn.rebuild()
 
     def add_continue_btn(self):
-        continue_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                              BUTTON_SIZE),
+        continue_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                     text='Продолжить',
                                                     manager=self.manager)
         self.continue_btn = continue_btn
 
     def add_new_game_btn(self):
-        new_game_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                              BUTTON_SIZE),
+        new_game_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                     text='Новая игра',
                                                     manager=self.manager)
         self.new_game_btn = new_game_btn
 
     def add_save_btn(self):
-        save_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                          BUTTON_SIZE),
+        save_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                 text='Сохранить игру',
                                                 manager=self.manager)
         self.save_btn = save_btn
 
     def add_load_button(self):
-        load_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                          BUTTON_SIZE),
+        load_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                 text='Загрузить игру',
                                                 manager=self.manager)
         self.load_btn = load_btn
 
     def add_back_to_menu_btn(self):
-        back_to_menu_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                                     BUTTON_SIZE),
+        back_to_menu_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                            text='Главное меню',
                                                            manager=self.manager)
         self.back_to_menu_btn = back_to_menu_button
 
     def add_quit_btn(self):
-        quit_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                          BUTTON_SIZE),
+        quit_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                 text='Выйти из игры',
                                                 manager=self.manager)
         self.quit_btn = quit_btn
@@ -159,15 +159,18 @@ class UpgradeMenu:
         self.set_coordinates_for_upg_images()
 
     def set_coordinates_for_upg_images(self):
-        images = [self.first_upg_image, self.second_upg_image, self.third_upg_image]
+        images = [self.first_upg_image, self.second_upg_image,
+                  self.third_upg_image]
         x = len(images) * UPGRADE_IMAGE_SIZE[1] // 2
         for i, img in enumerate(images):
             img.rect.x = CENTER_POINT[0] - x + i * BUTTON_SIZE[0]
-            img.rect.y = CENTER_POINT[1] - MARGIN_BOTTOM_IMAGE + MARGIN_TOP_BUTTON
+            img.rect.y = \
+                CENTER_POINT[1] - MARGIN_BOTTOM_IMAGE + MARGIN_TOP_BUTTON
             img.rebuild()
 
     def set_coordinates_for_upg_btns(self):
-        active_buttons = [self.first_upg_btn, self.second_upg_btn, self.third_upg_btn]
+        active_buttons = [self.first_upg_btn, self.second_upg_btn,
+                          self.third_upg_btn]
         x = len(active_buttons) / 2 * BUTTON_SIZE[0]
         for i, btn in enumerate(active_buttons):
             btn.rect.x = CENTER_POINT[0] - x + i * BUTTON_SIZE[0]
@@ -175,34 +178,40 @@ class UpgradeMenu:
             btn.rebuild()
 
     def add_first_upg_btn(self):
-        first_upg_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                               BUTTON_SIZE),
+        first_upg_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                      text='Увеличить hp на 1',
                                                      manager=self.manager)
-        first_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-                                                      image_surface=pygame.image.load('sprites/+hp.png'),
-                                                      manager=self.manager)
+
+        first_upg_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
+            image_surface=pygame.image.load('sprites/+hp.png'),
+            manager=self.manager)
         self.first_upg_btn = first_upg_btn
         self.first_upg_image = first_upg_image
 
     def add_second_upg_btn(self):
-        second_upg_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                                BUTTON_SIZE),
+        second_upg_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
                                                       text='Увеличить mp на 1',
                                                       manager=self.manager)
-        second_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-                                                       image_surface=pygame.image.load('sprites/+mp.png'),
-                                                       manager=self.manager)
+
+        second_upg_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
+            image_surface=pygame.image.load('sprites/+mp.png'),
+            manager=self.manager)
+
         self.second_upg_btn = second_upg_btn
         self.second_upg_image = second_upg_image
 
     def add_third_upg_btn(self):
-        third_upg_btn = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0),
-                                                                                BUTTON_SIZE),
-                                                      text='Увеличить cage_dis на 1',
+        third_upg_btn = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((0, 0), BUTTON_SIZE),
+            text='Увеличить cage_dis на 1',
                                                       manager=self.manager)
-        third_upg_image = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-                                                       image_surface=pygame.image.load('sprites/+cage_distance.png'),
+        third_upg_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
+            image_surface=pygame.image.load('sprites/+cage_distance.png'),
                                                        manager=self.manager)
         self.third_upg_btn = third_upg_btn
         self.third_upg_image = third_upg_image
