@@ -14,6 +14,7 @@ class Sprite(pygame.sprite.Sprite):
         col(int): столбик спрайта
         rect(pygame.rect.Rect): прямоугольник, на котором располагается спрайт
     """
+
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(*groups)
         self.image = image.copy()
@@ -26,6 +27,7 @@ class Sprite(pygame.sprite.Sprite):
 
 class Block(Sprite):
     '''Класс блоков.'''
+
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(image, col, row, x, y, *groups)
 
@@ -67,7 +69,7 @@ class Floor(Block):
             result(bool): возвращает True,
              если точка лежит в верхнем прямоугольнике, иначе False
         '''
-        x, y = abs(self.top_rect.centerx - mouse_pos[0]),\
+        x, y = abs(self.top_rect.centerx - mouse_pos[0]), \
                abs(self.top_rect.centery - mouse_pos[1])
         b = self.top_rect.height / 2
         a = self.top_rect.width / 2
@@ -159,7 +161,7 @@ class Player(Sprite):
                     if self.last_click > self.call_down:
                         if args[0].button == 1:
                             cell = \
-                            self.level.get_cell_for_first_layer(args[0].pos)
+                                self.level.get_cell_for_first_layer(args[0].pos)
                             if cell is not None and \
                                     cell[0] == self.col and \
                                     cell[1] == self.row:
@@ -179,14 +181,16 @@ class Player(Sprite):
                                     s_arr[self.row][self.col][1] = \
                                     list(filter(lambda x: x != self,
                                     [character for character in
-                                     s_arr[self.row][self.col][1]]))
+                                    s_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
+                                    self.level.events['done_moves'] += 1
+
                         elif args[0].button == 3 and not self.selected:
                             # cell хранит позицию на поле,
                             # а starting_cell для эффекта падения клетки
                             cell = \
-                            self.level.get_cell_for_first_layer(args[0].pos)
+                                self.level.get_cell_for_first_layer(args[0].pos)
                             # расстояние рассматривается по количеству кругов,
                             # поэтому учитываем диагонали
                             row_check = cell[1] - self.row
@@ -195,17 +199,18 @@ class Player(Sprite):
                             chosen_cell = \
                                 self.level.sprites_arr[cell[1]][cell[0]]
                             if (cell is not None and
-                            hypot(row_check, col_check) <= check_cage_dist and
-                            hypot(row_check, col_check) > 2 and
-                            all(list(map(lambda x: not isinstance(x, Cage),
-                            chosen_cell[1])))):
+                                    hypot(row_check, col_check) <= check_cage_dist and
+                                    hypot(row_check, col_check) > 2 and
+                                    all(list(map(lambda x: not isinstance(x, Cage),
+                                                 chosen_cell[1])))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
                                 if cell is not None and self.coins > 0:
                                     self.coins -= 1
                                     self.steps -= 1
                                     Cage(self.level, *cell,
-                                *self.level.get_cords_for_block(staring_cell),
-                                     self.level.all_sprites, self.level.cages)
+                                         *self.level.get_cords_for_block(staring_cell),
+                                         self.level.all_sprites, self.level.cages)
+                                    self.level.events['used_traps'] += 1
 
                 self.last_click = 0
 
@@ -264,6 +269,7 @@ class Cage(Sprite):
 
     def update(self, *args, **kwargs):
         '''Update спрайта клетки'''
+
         trapped_characters_cell = \
             self.level.sprites_arr[self.row][self.col][1]
         if not self.is_fallen:
@@ -287,9 +293,10 @@ class Cage(Sprite):
                 trapped_characters_cell[1].append(self)
             self.rect.y += self.top_rect_height
 
-        elif trapped_characters_cell[1] and \
-    (not isinstance(trapped_characters_cell[1][0], Cage) or
-            len(trapped_characters_cell[1]) > 1):
+        elif (trapped_characters_cell[1] and
+              (not isinstance(trapped_characters_cell[1][0], Cage) or
+            len(trapped_characters_cell[1]) > 1)):
+
             self.image = Cage.image.copy()
             # для дальнейшей прорисовки нужно убрать клетку из массива
             self.level.sprites_arr[self.row][self.col][1] = \
@@ -370,6 +377,7 @@ class Coin(Sprite):
                 self.level.player.row == self.row:
             self.pick_up_sound.play()
             self.level.player.coins += 1
+            self.level.events['picked_up_coins'] += 1
             self.kill()
         for enemy in self.level.enemies:
             if enemy.col == self.col and enemy.row == self.row:
@@ -465,9 +473,9 @@ class Mob(Sprite):
                     self.level.player.kill()
                 self.kill()
                 cur_cell[1] = \
-                    list(filter(lambda x: x != self,
-                    [character for character in
-                     cur_cell[1]]))
+                        list(filter(lambda x: x != self,
+                        [character for character in
+                        cur_cell[1]]))
                 return
 
     def voln(self, x, y, x1, y1):
@@ -492,8 +500,7 @@ class Mob(Sprite):
             for col in range(self.level.level_map.width):
                 cur_cell = self.level.sprites_arr[row][col]
                 board[row].append([-1, (row, col)]
-                                  if cur_cell[1] and
-                    isinstance(cur_cell[1][0], Cage)
+                    if cur_cell[1] and isinstance(cur_cell[1][0], Cage)
                     else [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
