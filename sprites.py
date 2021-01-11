@@ -1,7 +1,6 @@
 import pygame
 from collections import deque
 from settings import *
-from math import hypot
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -193,15 +192,15 @@ class Player(Sprite):
                                 self.level.get_cell_for_first_layer(args[0].pos)
                             # расстояние рассматривается по количеству кругов,
                             # поэтому учитываем диагонали
-                            row_check = cell[1] - self.row
-                            col_check = cell[0] - self.col
+                            row_check = (cell[1] - self.row) ** 2
+                            col_check = (cell[0] - self.col) ** 2
                             check_cage_dist = 2 * self.cage_distance ** 2
                             chosen_cell = \
                                 self.level.sprites_arr[cell[1]][cell[0]]
                             if (cell is not None and
-                                    hypot(row_check, col_check) <= check_cage_dist and
-                                    hypot(row_check, col_check) > 2 and
-                                    all(list(map(lambda x: not isinstance(x, Cage),
+                                row_check + col_check <= check_cage_dist and
+                                row_check + col_check > 2 and
+                                all(list(map(lambda x: not isinstance(x, Cage),
                                                  chosen_cell[1])))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
                                 if cell is not None and self.coins > 0:
@@ -271,7 +270,7 @@ class Cage(Sprite):
         '''Update спрайта клетки'''
 
         trapped_characters_cell = \
-            self.level.sprites_arr[self.row][self.col][1]
+            self.level.sprites_arr[self.row][self.col]
         if not self.is_fallen:
             self.level.cages.add(self)
             self.rect.y -= self.top_rect_height
@@ -321,6 +320,7 @@ class Cage(Sprite):
                         trapped_character.kill()
                         if isinstance(trapped_character, Mob):
                             self.level.player.coins += trapped_character.coins
+                            self.level.events['locked_up_mafia'] += 1
 
                 timer = 0
                 alpha_channel = 255
@@ -342,6 +342,8 @@ class Cage(Sprite):
                 if isinstance(character_for_animation, Player):
                     self.level.player.health = 0
                     self.level.game_over = True
+                else:
+                    self.level.events['locked_up_mafia'] += 1
 
                 character_for_animation.kill()
                 self.kill()
@@ -462,8 +464,9 @@ class Mob(Sprite):
                 self.move(cell)
 
             # в этом случае SECOND_LAYER не нужно учитывать
-            cur_cell[1].append(self)
-            block = cur_cell[0]
+            new_cell = self.level.sprites_arr[cell[1]][cell[0]]
+            new_cell[1].append(self)
+            block = new_cell[0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
                 self.level.player.health = \
@@ -472,10 +475,11 @@ class Mob(Sprite):
                     self.level.game_over = True
                     self.level.player.kill()
                 self.kill()
-                cur_cell[1] = \
+                new_cell[1] = \
                         list(filter(lambda x: x != self,
                         [character for character in
-                        cur_cell[1]]))
+                        new_cell[1]]))
+                self.level.events['health_down'] += 1
                 return
 
     def voln(self, x, y, x1, y1):
