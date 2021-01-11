@@ -1,8 +1,12 @@
+import pygame
+
+pygame.init()
+info = pygame.display.Info()
 # Основные настройки игры
 
 # Настройки игрового окна
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
 SCREEN_SIZE = [SCREEN_WIDTH, SCREEN_HEIGHT]
 CENTER_POINT = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
 FPS = 60
