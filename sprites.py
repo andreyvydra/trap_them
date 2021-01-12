@@ -491,117 +491,117 @@ class Mob(Sprite):
             return
 
 
-def voln(self, x, y, x1, y1):
-    '''
-    Алгоритм поиска пути к игроку
+    def voln(self, x, y, x1, y1):
+        '''
+        Алгоритм поиска пути к игроку
 
-    Arguments:
-        x(int): начальная координата x
-        y(int): начальная координата y
-        x1(int): координата x игрока
-        y1(int): координата y игрока
+        Arguments:
+            x(int): начальная координата x
+            y(int): начальная координата y
+            x1(int): координата x игрока
+            y1(int): координата y игрока
 
-    Return:
-         path(arr[int, int]): массив с координатами пути
-    '''
-    path = []
-    board = []
-    # в матрице задаётся начальное расстояние = 1000 для обычных клеток
-    # и расстояние = -1 для полей с клеткой
-    for row in range(self.level.level_map.height):
-        board.append([])
-        for col in range(self.level.level_map.width):
-            cur_cell = self.level.sprites_arr[row][col]
-            board[row].append([-1, (row, col)]
-                              if cur_cell[1] and isinstance(cur_cell[1][0], Cage)
-                              else [1000, (row, col)])
-        # так как у нас координаты заданы по-другому в загрузке карты
-        board[row] = board[row]
-    queue = deque()
-    queue.append((x, y))
-    board[x][y][0] = 1
-    self.get_to_all_neighbors(x, y, board, queue)
-    end_cur = board[x1][y1][0]
-    while 0 < end_cur < 1000:
-        # использем связный список,
-        # чтобы находить, откуда мы пришли в ячейку
-        path.append((y1, x1))
-        x1, y1 = board[x1][y1][1]
-        end_cur -= 1
-    return path[::-1]
+        Return:
+             path(arr[int, int]): массив с координатами пути
+        '''
+        path = []
+        board = []
+        # в матрице задаётся начальное расстояние = 1000 для обычных клеток
+        # и расстояние = -1 для полей с клеткой
+        for row in range(self.level.level_map.height):
+            board.append([])
+            for col in range(self.level.level_map.width):
+                cur_cell = self.level.sprites_arr[row][col]
+                board[row].append([-1, (row, col)]
+                                  if cur_cell[1] and isinstance(cur_cell[1][0], Cage)
+                                  else [1000, (row, col)])
+            # так как у нас координаты заданы по-другому в загрузке карты
+            board[row] = board[row]
+        queue = deque()
+        queue.append((x, y))
+        board[x][y][0] = 1
+        self.get_to_all_neighbors(x, y, board, queue)
+        end_cur = board[x1][y1][0]
+        while 0 < end_cur < 1000:
+            # использем связный список,
+            # чтобы находить, откуда мы пришли в ячейку
+            path.append((y1, x1))
+            x1, y1 = board[x1][y1][1]
+            end_cur -= 1
+        return path[::-1]
 
 
-def get_to_all_neighbors(self, row, col, board, queue):
-    '''
-    Функция перебора всех соседей по очереди
+    def get_to_all_neighbors(self, row, col, board, queue):
+        '''
+        Функция перебора всех соседей по очереди
 
-    Arguments:
-        row(int): начальный ряд
-        col(int): начальный столбец
-        board(arr[int, [int, int]]): текущее состояние матрицы
-        queue(deque): очередь координат соседей
+        Arguments:
+            row(int): начальный ряд
+            col(int): начальный столбец
+            board(arr[int, [int, int]]): текущее состояние матрицы
+            queue(deque): очередь координат соседей
 
-    Return:
-        board(arr[int, [int, int]]): возвращает изменённую матрицу
-    '''
-    # board - список, [расстояние от моба, (координаты предыдущей ячейки)]
-    if board[row][col][0] == -1 or \
-            row == self.level.level_map.height - 1 and \
-            col == self.level.level_map.width - 1:
+        Return:
+            board(arr[int, [int, int]]): возвращает изменённую матрицу
+        '''
+        # board - список, [расстояние от моба, (координаты предыдущей ячейки)]
+        if board[row][col][0] == -1 or \
+                row == self.level.level_map.height - 1 and \
+                col == self.level.level_map.width - 1:
+            return board
+        delta_x = [-1, 0, 0, 1]
+        delta_y = [0, -1, 1, 0]
+        while queue:
+            row, col = queue.pop()
+            for delta_row, delta_col in zip(delta_y, delta_x):
+                if 0 <= delta_row + row < self.level.level_map.height and \
+                        0 <= delta_col + col < self.level.level_map.width:
+                    next_row = delta_row + row
+                    next_col = delta_col + col
+                    if (board[next_row][next_col][0] > board[row][col][0] + 1
+                            and board[next_row][next_col][0] != -1):
+                        # сохраняем предыдущую ячейку, вместе с расстоянием
+                        board[next_row][next_col] = [board[row][col][0] + 1,
+                                                     (row, col)]
+                        # если расстояние для текущй клетки обновлено,
+                        # нужно пройти по всем соседей текущей клетки
+                        queue.append((next_row, next_col))
         return board
-    delta_x = [-1, 0, 0, 1]
-    delta_y = [0, -1, 1, 0]
-    while queue:
-        row, col = queue.pop()
-        for delta_row, delta_col in zip(delta_y, delta_x):
-            if 0 <= delta_row + row < self.level.level_map.height and \
-                    0 <= delta_col + col < self.level.level_map.width:
-                next_row = delta_row + row
-                next_col = delta_col + col
-                if (board[next_row][next_col][0] > board[row][col][0] + 1
-                        and board[next_row][next_col][0] != -1):
-                    # сохраняем предыдущую ячейку, вместе с расстоянием
-                    board[next_row][next_col] = [board[row][col][0] + 1,
-                                                 (row, col)]
-                    # если расстояние для текущй клетки обновлено,
-                    # нужно пройти по всем соседей текущей клетки
-                    queue.append((next_row, next_col))
-    return board
 
 
-def move(self, cell):
-    '''
-    Перемещение моба
+    def move(self, cell):
+        '''
+        Перемещение моба
 
-    Arguments:
-        cell(tuple(int, int)): кортеж координат клетки
-    '''
-    self.change_col_and_row(cell)
-    x, y = self.level.get_cords_for_player((self.drawing_col,
-                                            self.drawing_row))
-    self.change_cords(x, y)
-
-
-def change_cords(self, x, y):
-    '''
-    Изменение координат спрайта.
-
-    Arguments:
-        x: координата по x
-        y: координата по y
-    '''
-    self.rect.x = x
-    self.rect.y = y
+        Arguments:
+            cell(tuple(int, int)): кортеж координат клетки
+        '''
+        self.change_col_and_row(cell)
+        x, y = self.level.get_cords_for_player((self.drawing_col,
+                                                self.drawing_row))
+        self.change_cords(x, y)
 
 
-def change_col_and_row(self, cell):
-    '''
-    Изменяет col, row, drawing_col, drawing_row спрайта.
+    def change_cords(self, x, y):
+        '''
+        Изменение координат спрайта.
 
-    Arguments:
-        cell(tuple(int, int)): кортеж с координатами x и y
-    '''
-    self.col = cell[0]
-    self.row = cell[1]
-    self.drawing_col = self.col + SECOND_LAYER
-    self.drawing_row = self.row + SECOND_LAYER
+        Arguments:
+            x: координата по x
+            y: координата по y
+        '''
+        self.rect.x = x
+        self.rect.y = y
+
+
+    def change_col_and_row(self, cell):
+        '''
+        Изменяет col, row, drawing_col, drawing_row спрайта.
+
+        Arguments:
+            cell(tuple(int, int)): кортеж с координатами x и y
+        '''
+        self.col = cell[0]
+        self.row = cell[1]
+        self.drawing_col = self.col + SECOND_LAYER
+        self.drawing_row = self.row + SECOND_LAYER
