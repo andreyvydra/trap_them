@@ -445,50 +445,50 @@ class Mob(Sprite):
                     min(self.target.col - self.col, self.step), -self.step)
                              if self.target.col != self.col else 0)
 
-        # также на мирном уровне сложности delta_row обнуляется,
-        # при разнице в обеих координатах
-        if abs(delta_col) + abs(delta_row) > 1:
-            delta_row = 0
+                # также на мирном уровне сложности delta_row обнуляется,
+                # при разнице в обеих координатах
+                if abs(delta_col) + abs(delta_row) > 1:
+                    delta_row = 0
 
-        new_row = self.row + delta_row
-        new_col = self.col + delta_col
+                new_row = self.row + delta_row
+                new_col = self.col + delta_col
 
-        # далее проверяем получившиеся row и col,
-        # max исключает ход левее/ниже первой ячейки, а
-        row = min(
-            max(new_row, 0), self.level.level_map.height - 1)
-        col = min(
-            max(new_col, 0), self.level.level_map.width - 1)
+                # далее проверяем получившиеся row и col,
+                # max исключает ход левее/ниже первой ячейки, а
+                row = min(
+                    max(new_row, 0), self.level.level_map.height - 1)
+                col = min(
+                    max(new_col, 0), self.level.level_map.width - 1)
 
-        cells = [(col, row)]
+                cells = [(col, row)]
 
-        cur_cell = self.level.sprites_arr[self.row][self.col]
-        cur_cell[1] = \
-            list(filter(lambda x: x != self,
-                        [character for character in
-                         cur_cell[1]]))
-
-        for cell in cells:
-            self.move(cell)
-
-        # в этом случае SECOND_LAYER не нужно учитывать
-        new_cell = self.level.sprites_arr[cell[1]][cell[0]]
-        new_cell[1].append(self)
-        block = new_cell[0]
-        if (block.col == self.level.player.col
-                and block.row == self.level.player.row):
-            self.level.player.health = \
-                max(self.level.player.health - self.damage, 0)
-            if self.level.player.health == 0:
-                self.level.game_over = True
-                self.level.player.kill()
-            self.kill()
-            new_cell[1] = \
+            cur_cell = self.level.sprites_arr[self.row][self.col]
+            cur_cell[1] = \
                 list(filter(lambda x: x != self,
                             [character for character in
-                             new_cell[1]]))
-            self.level.events['health_down'] += 1
-            return
+                             cur_cell[1]]))
+
+            for cell in cells:
+                self.move(cell)
+
+            # в этом случае SECOND_LAYER не нужно учитывать
+            new_cell = self.level.sprites_arr[cell[1]][cell[0]]
+            new_cell[1].append(self)
+            block = new_cell[0]
+            if (block.col == self.level.player.col
+                    and block.row == self.level.player.row):
+                self.level.player.health = \
+                    max(self.level.player.health - self.damage, 0)
+                if self.level.player.health == 0:
+                    self.level.game_over = True
+                    self.level.player.kill()
+                self.kill()
+                new_cell[1] = \
+                    list(filter(lambda x: x != self,
+                                [character for character in
+                                 new_cell[1]]))
+                self.level.events['health_down'] += 1
+                return
 
 
     def voln(self, x, y, x1, y1):
