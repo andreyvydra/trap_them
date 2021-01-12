@@ -2,7 +2,6 @@ import sqlite3
 
 import pygame
 import pygame_gui
-import pickle
 from map import *
 from settings import *
 from menu import *
