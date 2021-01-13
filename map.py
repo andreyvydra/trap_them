@@ -262,14 +262,13 @@ class Level:
             for col, row in zip(x, y):
                 for distance_x in range(1, self.player.cage_distance + 1):
                     for distance_y in range(1, self.player.cage_distance + 1):
+                        cur_col = col * distance_x + self.player.col
+                        cur_row = row * distance_y + self.player.row
 
-                        col, row = col * distance_x, row * distance_y
-                        col += self.player.col
-                        row += self.player.row
-
-                        if self.is_cell_in_dis_range(col, row):
+                        if self.is_cell_in_dis_range(cur_col, cur_row):
                             cur_x, cur_y = self. \
-                                get_cords_for_movement_circles((col, row))
+                                get_cords_for_movement_circles((cur_col,
+                                                                cur_row))
                             pygame.draw.circle(self.screen, '#00E5DF',
                                                (cur_x, cur_y), radius)
 
@@ -493,7 +492,8 @@ class Level:
 
     def is_cell_in_dis_range(self, col, row):
         if self.is_cell_in_level_range(col, row) and \
-                col ** 2 + row ** 2 > 2:
+                (col - self.player.col) ** 2 +\
+                (row - self.player.row) ** 2 > 2:
             return True
         return False
 
