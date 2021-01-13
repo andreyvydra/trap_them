@@ -3,8 +3,25 @@ from map import *
 
 
 class Save:
-    """Класс, который занимается всей обработкой данных,
-    сохранением и подгрузкой в игру"""
+    """
+    Класс, который занимается всей обработкой данных,
+    сохранением и подгрузкой в игру
+
+    Attributes:
+        path_save(str): Путь к файлу сохранения
+
+    Methods:
+        get_data(): возвращает данные из файла сохранения
+        get_level_and_map(screen): возвращает level_map и level,
+                                   созданные по данным из файла
+        save_game(level): сохранение данных в файл сохранения
+        get_level_data(level): получение данных об уровне из
+                               уровня
+        get_map_data(level): получение данных о карте
+        get_player_data(level): получение данных об игроке из уровня
+
+
+    """
 
     def __init__(self, path_save):
         self.path_save = path_save

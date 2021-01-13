@@ -7,10 +7,35 @@ import pygame
 
 
 class Map:
-    def __init__(self, path_map, difficulty=2, first_layer=None, second_layer=None):
+    """
+    Карта, которая генерируется и хранит в себе
+    данные о первоначальном расположении всех объектов
+    на уровне
+
+    Attributes:
+        difficulty(int): Сложность уровня (по умолчанию 2)
+        path_map(str): Относительный путь к дериктории с файлами уровня
+        first_layer(list): Список со значениями первого слоя уровня
+        second_layer(list): Список со значениями второго слоя уровня
+        width(int): Ширина карты
+        height(int): Высота карты
+        num_characters(int): Количество персонажей на карте
+
+    Methods:
+        load_map(): диспетчер для вызова функций подгрузки
+        load_floor_layer(): подгрузка первого слоя уровня (пола)
+        load_characters_layer(): подгрузка второго слоя уровня (персонажей)
+        create_map(): генерирование новой карты
+    """
+
+    def __init__(self, path_map, difficulty=2,
+                 first_layer=None, second_layer=None):
 
         self.difficulty = difficulty
         self.path_map = path_map
+        self.width = None
+        self.height = None
+        self.num_characters = None
         self.create_map()
 
         if first_layer is None:
@@ -24,11 +49,12 @@ class Map:
             self.second_layer = second_layer
 
     def load_map(self):
-        # Подгружаем наши layers
+        """Вызов функций подгрузки карты"""
         self.load_floor_layer()
         self.load_characters_layer()
 
     def load_floor_layer(self):
+        """Подгрузка первого слоя уровня (пола)"""
         with open(self.path_map + '/map.txt') as current_file:
             table = [row.split() for row in current_file]
             for row in range(self.height):
@@ -38,6 +64,7 @@ class Map:
                 self.first_layer.append(row_list)
 
     def load_characters_layer(self):
+        """Подгрузка второго слоя уровня (персонажей)"""
         with open(self.path_map + '/characters.txt') as current_file:
             table = [row.split() for row in current_file]
             for row in range(self.height):
@@ -47,6 +74,7 @@ class Map:
                 self.second_layer.append(row_list)
 
     def create_map(self):
+        """Функция по созданию (генерированию) новой карты"""
         self.width = randrange(5, 10)
         self.height = randrange(5, 10)
         if self.difficulty == 1:
@@ -57,14 +85,14 @@ class Map:
             num_coins = self.width * self.height // 20
         # матрица, где для каждой ячейки хранится row и col
         type_of_block = randint(0, 3)
-        matrix = [[type_of_block] * self.width for row in range(self.height)]
+        matrix = [[type_of_block] * self.width for _ in range(self.height)]
         result = []
         with open(self.path_map + '/map.txt', 'w') as current_file:
             for row in range(self.height):
                 result.append(' '.join(str(i) for i in matrix[row]))
             current_file.writelines('\n'.join(result))
         # так как остаются клетки со значением спрайта пола, нужно обнулить все клетки
-        matrix = [[0] * self.width for row in range(self.height)]
+        matrix = [[0] * self.width for _ in range(self.height)]
         characters = sample([(row, col) for row in range(self.height) for col in range(self.width)],
                             self.num_characters)
         coins = sample(characters, num_coins)
@@ -83,6 +111,49 @@ class Map:
 
 
 class Level:
+    """
+    Класс уровня, который хранит и обрабатывает все спрайты,
+    а также эвенты, которые происходят в сомой игре.
+
+    Attributes:
+        screen(Screen): surface, на которой отображаются все спрайты
+
+        level_number(int): атрибут, который нужен для отображения номера
+                           уровня, на котором находится игрок
+
+        alpha_channel_for_lvl_number(int): начальное значение для альфа канала
+                                           текста с номером уровня
+
+        x(int): начальный x для отрисовки уровня
+        y(int): начальный y для отрисовки уровня
+        delta_x(int): смещение на x спрайтов при отрисовки
+        delta_y(int): смещение на y спрайтов при отрисовки
+
+        all_sprites(Group): группа всех спрайтов
+        enemies(Group): группа спрайтов противников
+        floor(Group): группа спрайтов пола
+        cages(Group): группа спрайтов клеток
+        coins(Group): группа спрайтов монет
+        traps(Group): группа спрайтов ловушек
+
+        is_pressed_end_move_btn(bool): флаг нажатия на кнопку
+                                       'закончит ход'
+        is_player_turn(bool): флаг хода игрока
+        game_over(bool): флаг завершения игры
+
+
+        manager(UIManager): мэнэджэр с кнопкой закончить ход
+        events(dict): словарь с событиями, которые произошли в уровне
+        player(Player): игрок
+
+        font(Font): шрифт для надписей в игре
+        level_number_text(Surface): надпись с номеров уровня
+
+    Methods:
+
+
+    """
+
     def __init__(self, level_map, screen, level_number=1):
         self.level_map = level_map
         self.sprites_arr = [[[None, []] for _ in range(self.level_map.width)]
@@ -91,11 +162,15 @@ class Level:
         self.level_number = level_number
         self.alpha_channel_for_lvl_number = 255
 
-        # Начальные x и y для отрисовки карты
-        self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
-        self.y = CENTER_POINT[1] - (self.level_map.height - 1) * SCALED_CUBE_HEIGHT // 4
+        # 1 - мирный, мобы просто идут на игрока,
+        # 2 - нормальный, ищет кратчайший путь,
+        # но просто так на ловушки не попадается
+        self.difficulty = self.level_map.difficulty
 
-        # Дельта смещения для отрисовки каждого блока относительно соседних
+        self.x = CENTER_POINT[0] - SCALED_CUBE_WIDTH // 2
+        self.y = CENTER_POINT[1] - ((self.level_map.height - 1) *
+                                    SCALED_CUBE_HEIGHT // 4)
+
         self.delta_x = SCALED_CUBE_WIDTH // 2
         self.delta_y = SCALED_TOP_RECT_HEIGHT // 2
 
@@ -105,8 +180,10 @@ class Level:
         self.cages = pygame.sprite.Group()
         self.coins = pygame.sprite.Group()
         self.traps = pygame.sprite.Group()
-        self.hearts = pygame.sprite.Group()
+
         self.is_pressed_end_move_btn = False
+        self.is_player_turn = True
+        self.game_over = False
 
         self.manager = None
         self.events = {'picked_up_coins': 0,
@@ -116,18 +193,14 @@ class Level:
                        'used_traps': 0,
                        'level_complete': 0}
 
-        self.is_player_turn = True
-        self.game_over = False
         self.player = None
 
         self.font = pygame.font.Font(None, 50)
-        self.level_number_text = self.font.render(f'Level {str(self.level_number)}', True, (255, 255, 255))
-        # 1 - мирный, мобы просто идут на игрока,
-        # 2 - нормальный, ищет кратчайший путь, но просто так на ловушки не попадается
-        self.difficulty = self.level_map.difficulty
+        self.level_number_text = self.font. \
+            render(f'Level {str(self.level_number)}',
+                   True, (255, 255, 255))
 
     def render(self):
-
         self.floor.draw(self.screen)
         self.coins.draw(self.screen)
         self.traps.draw(self.screen)
@@ -135,6 +208,7 @@ class Level:
         self.render_cage_cells()
         self.render_players_moves()
 
+        # Алгоритм для корректной отрисовки персонажей и клеток
         cages = {(cage.col, cage.row): cage for cage in self.cages}
 
         for row_n, row in enumerate(self.sprites_arr):
@@ -157,35 +231,51 @@ class Level:
         self.render_num_characters()
         self.render_mp()
         self.manager.draw_ui(self.screen)
+        self.render_level_of_number()
+
+    def render_level_of_number(self):
         if self.alpha_channel_for_lvl_number > 0:
-            self.level_number_text.set_alpha(self.alpha_channel_for_lvl_number)
+            self.level_number_text. \
+                set_alpha(self.alpha_channel_for_lvl_number)
+
             self.alpha_channel_for_lvl_number -= 255 / FPS * 0.5
-            x, y = CENTER_POINT[0] - self.level_number_text.get_width() // 2, 20
+
+            x, y = (CENTER_POINT[0] -
+                    self.level_number_text.get_width() // 2), 20
+
             self.screen.blit(self.level_number_text, (x, y))
 
     def render_mp(self):
         for i in range(self.player.max_steps):
-            if i + 1 <= self.player.steps:
-                pygame.draw.rect(self.screen, (15, 82, 186), (20 + (i * 60), 50, 60, 25))
-            pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 50, 60, 25), 2)
+            if i < self.player.steps:
+                pygame.draw.rect(self.screen, (15, 82, 186),
+                                 (20 + (i * 60), 50, 60, 25))
+            pygame.draw.rect(self.screen, (255, 255, 255),
+                             (20 + (i * 60), 50, 60, 25), 2)
 
     def render_cage_cells(self):
-        if self.player.alive() and not self.player.selected and self.player.steps:
+        if self.player.alive() and not self.player.selected and \
+                self.player.steps:
             x = [-1, -1, 0, -1, 0, 1, 1, 1]
             y = [-1, 0, -1, 1, 1, 0, 1, -1]
             radius = 7
             for col, row in zip(x, y):
                 for distance_x in range(1, self.player.cage_distance + 1):
                     for distance_y in range(1, self.player.cage_distance + 1):
-                        if 0 <= self.player.col + col * distance_x < self.level_map.width and \
-                                0 <= self.player.row + row * distance_y < self.level_map.height and \
-                                (col * distance_x) ** 2 + (row * distance_y) ** 2 > 2:
-                                cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col * distance_x,
-                                                                                    self.player.row + row * distance_y))
-                                pygame.draw.circle(self.screen, ('#00E5DF'), (cur_x, cur_y), radius)
+
+                        col, row = col * distance_x, row * distance_y
+                        col += self.player.col
+                        row += self.player.row
+
+                        if self.is_cell_in_dis_range(col, row):
+                            cur_x, cur_y = self. \
+                                get_cords_for_movement_circles((col, row))
+                            pygame.draw.circle(self.screen, '#00E5DF',
+                                               (cur_x, cur_y), radius)
 
     def render_number_of_coins(self):
-        text = self.font.render(f"{self.player.coins}", True, (212, 175, 55))
+        text = self.font.render(f"{self.player.coins}", True,
+                                (212, 175, 55))
         text_w = text.get_width()
         text_x = SCREEN_WIDTH - text_w - 20
         text_y = 20
@@ -194,21 +284,26 @@ class Level:
     def render_health(self):
         for i in range(self.player.max_health):
             if i + 1 <= self.player.health:
-                pygame.draw.rect(self.screen, (98, 212, 77), (20 + (i * 60), 20, 60, 25))
-            pygame.draw.rect(self.screen, (255, 255, 255), (20 + (i * 60), 20, 60, 25), 2)
+                pygame.draw.rect(self.screen, (98, 212, 77),
+                                 (20 + (i * 60), 20, 60, 25))
+            pygame.draw.rect(self.screen, (255, 255, 255),
+                             (20 + (i * 60), 20, 60, 25), 2)
 
     def render_players_moves(self):
-        if self.player.alive() and self.player.selected and self.player.steps:
+        if self.player.alive() and self.player.selected and \
+                self.player.steps:
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
             for col, row in zip(x, y):
-                if 0 <= self.player.col + col < self.level_map.width and \
-                        0 <= self.player.row + row < self.level_map.height:
-                    if len(self.sprites_arr[self.player.row + row][self.player.col + col][1]) == 0:
-                        cur_x, cur_y = self.get_cords_for_movement_circles((self.player.col + col,
-                                                                            self.player.row + row))
-                        pygame.draw.circle(self.screen, (255, 255, 0), (cur_x, cur_y), radius)
+                col = self.player.col + col
+                row = self.player.row + row
+                if self.is_cell_in_level_range(col, row):
+                    if len(self.sprites_arr[row][col][1]) == 0:
+                        cur_x, cur_y = self. \
+                            get_cords_for_movement_circles((col, row))
+                        pygame.draw.circle(self.screen, (255, 255, 0),
+                                           (cur_x, cur_y), radius)
 
     def render_num_characters(self):
         for row in range(self.level_map.height):
@@ -226,10 +321,12 @@ class Level:
                         text_h = text.get_height()
                         text_x = x + SCALED_TOP_RECT_WIDTH // 2 - text_w // 2
                         text_y = y - SCALED_TOP_RECT_HEIGHT + text_h
-                        pygame.draw.rect(self.screen, ('#282828'), (text_x - 5, text_y - 2,
-                                                                    text_w + 10, text_h + 5))
-                        pygame.draw.rect(self.screen, ('white'), (text_x - 5, text_y - 2,
-                                                                  text_w + 10, text_h + 5), 1)
+                        pygame.draw.rect(self.screen, '#282828',
+                                         (text_x - 5, text_y - 2,
+                                          text_w + 10, text_h + 5))
+                        pygame.draw.rect(self.screen, 'white',
+                                         (text_x - 5, text_y - 2,
+                                          text_w + 10, text_h + 5), 1)
                         self.screen.blit(text, (text_x, text_y))
 
     def update(self, *args, **kwargs):
@@ -238,44 +335,50 @@ class Level:
         td = args[1]
         self.manager.update(td)
         if self.is_player_turn:
-            self.all_sprites.update(*args, **kwargs)
-            if self.is_pressed_end_move_btn:
-                self.is_pressed_end_move_btn = False
-                self.is_player_turn = False
-                font = pygame.font.Font(None, 50)
-                text = font.render("Enemies' move!", True, (100, 255, 100))
-                text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                text_y = 20
-                self.screen.blit(text, (text_x, text_y))
-                self.render()
-                pygame.display.flip()
-                ping_for_message = 10000000
-                while ping_for_message != 0:
-                    ping_for_message -= 1
-
-                self.screen.fill('#282828')
+            self.update_for_players_turn(*args, **kwargs)
         else:
-            self.enemies.update()
-            self.cages.update()
-            self.traps.update()
-            if not self.game_over:
-                self.player.steps = self.player.max_steps
-                font = pygame.font.Font(None, 50)
-                text = font.render("Your move!", True, (100, 255, 100))
-                text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-                text_y = 20
-                self.screen.blit(text, (text_x, text_y))
-                self.is_player_turn = True
-                self.render()
-                pygame.display.flip()
-                ping_for_message = 10000000
-                while ping_for_message != 0:
-                    ping_for_message -= 1
+            self.update_for_enemies_turn()
 
-                self.screen.fill('#282828')
-            else:
-                self.is_player_turn = True
-                self.player.is_pressed_end_move_btn = False
+    def update_for_players_turn(self, *args, **kwargs):
+        self.all_sprites.update(*args, **kwargs)
+        if self.is_pressed_end_move_btn:
+            self.is_pressed_end_move_btn = False
+            self.is_player_turn = False
+            font = pygame.font.Font(None, 50)
+            text = font.render("Enemies' move!", True, (100, 255, 100))
+            text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+            text_y = 20
+            self.screen.blit(text, (text_x, text_y))
+            self.render()
+            pygame.display.flip()
+            ping_for_message = 10000000
+            while ping_for_message != 0:
+                ping_for_message -= 1
+
+            self.screen.fill('#282828')
+
+    def update_for_enemies_turn(self):
+        self.enemies.update()
+        self.cages.update()
+        self.traps.update()
+        if not self.game_over:
+            self.player.steps = self.player.max_steps
+            font = pygame.font.Font(None, 50)
+            text = font.render("Your move!", True, (100, 255, 100))
+            text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+            text_y = 20
+            self.screen.blit(text, (text_x, text_y))
+            self.is_player_turn = True
+            self.render()
+            pygame.display.flip()
+            ping_for_message = 10000000
+            while ping_for_message != 0:
+                ping_for_message -= 1
+
+            self.screen.fill('#282828')
+        else:
+            self.is_player_turn = True
+            self.player.is_pressed_end_move_btn = False
 
     def get_events(self):
         return self.events
@@ -311,16 +414,17 @@ class Level:
     def load_coins(self, coins):
         for coin in coins:
             col, row = coin['col'], coin['row']
-            x, y = self.get_cords_for_block((col + SECOND_LAYER, row + SECOND_LAYER))
-            x += (SCALED_CUBE_WIDTH - Coin.image.get_width()) // 2
-            y += (SCALED_CUBE_HEIGHT - Coin.image.get_height()) - SCALED_TOP_RECT_HEIGHT // 2
+            drawing_col = col + SECOND_LAYER
+            drawing_row = row + SECOND_LAYER
+            x, y = self.get_cords_for_coin((drawing_col, drawing_row))
             Coin(self, col, row, x, y,
                  self.all_sprites, self.coins)
 
     def load_cages(self, cages):
         for cage in cages:
             col, row = cage['col'], cage['row']
-            drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+            drawing_col = col + SECOND_LAYER
+            drawing_row = row + SECOND_LAYER
             x, y = self.get_cords_for_block((drawing_col, drawing_row))
             Cage(self, col, row, x, y,
                  self.all_sprites, self.floor)
@@ -328,11 +432,13 @@ class Level:
     def load_enemies(self, enemies):
         for enemy in enemies:
             col, row = enemy['col'], enemy['row']
-            drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
+            drawing_col = col + SECOND_LAYER
+            drawing_row = row + SECOND_LAYER
             x, y = self.get_cords_for_player((drawing_col, drawing_row))
             coins, step = enemy['coins'], enemy['step']
             new_mob = Mob(self, col, row, x, y,
-                          self.all_sprites, self.enemies, coins=coins, step=step)
+                          self.all_sprites, self.enemies,
+                          coins=coins, step=step)
             self.sprites_arr[row][col][1].append(new_mob)
 
     def load_floor(self, floor):
@@ -341,19 +447,23 @@ class Level:
             x, y = self.get_cords_for_block((col, row))
             type_of_block = block['type_of_block']
             current_floor = Floor(col, row, x, y,
-                                  self.all_sprites, self.floor, type_of_block=type_of_block)
+                                  self.all_sprites, self.floor,
+                                  type_of_block=type_of_block)
             self.sprites_arr[row][col][0] = current_floor
 
     def update_text_number_of_level(self):
-        self.level_number_text = self.font.render(f'Level {str(self.level_number)}',
-                                                  True, (255, 255, 255))
+        self.level_number_text = self.font. \
+            render(f'Level {str(self.level_number)}',
+                   True, (255, 255, 255))
 
     def load_sprites_from_first_layer(self):
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 x, y = self.get_cords_for_block((col, row))
-                current_floor = Floor(col, row, x, y, self.all_sprites, self.floor,
-                                      type_of_block=self.level_map.first_layer[row][col])
+                type_of_block = self.level_map.first_layer[row][col]
+                current_floor = Floor(col, row, x, y,
+                                      self.all_sprites, self.floor,
+                                      type_of_block=type_of_block)
                 self.sprites_arr[row][col][0] = current_floor
 
     def load_sprites_from_second_layer(self):
@@ -361,21 +471,37 @@ class Level:
             for col in range(self.level_map.width):
                 sprite_num = self.level_map.second_layer[row][col]
                 if sprite_num != 0:
-                    current_col, current_row = col + SECOND_LAYER, row + SECOND_LAYER
-                    x, y = self.get_cords_for_player((current_col, current_row))
+                    current_col = col + SECOND_LAYER
+                    current_row = row + SECOND_LAYER
+                    x, y = self. \
+                        get_cords_for_player((current_col, current_row))
                     if sprite_num == 1:
-                        self.player = Player(self, col, row, x, y, self.all_sprites)
+                        self.player = Player(self, col, row,
+                                             x, y, self.all_sprites)
                         self.sprites_arr[row][col][1].append(self.player)
 
                     elif sprite_num == 2:
-                        new_mob = Mob(self, col, row, x, y, self.all_sprites, self.enemies)
+                        new_mob = Mob(self, col, row,
+                                      x, y, self.all_sprites, self.enemies)
 
                         self.sprites_arr[row][col][1].append(new_mob)
                     elif sprite_num == 20:
-                        x, y = self.get_cords_for_block((col + SECOND_LAYER, row + SECOND_LAYER))
-                        x += (SCALED_CUBE_WIDTH - Coin.image.get_width()) // 2
-                        y += (SCALED_CUBE_HEIGHT - Coin.image.get_height()) - SCALED_TOP_RECT_HEIGHT // 2
-                        Coin(self, col, row, x, y, self.all_sprites, self.coins)
+                        x, y = self. \
+                            get_cords_for_coin((current_col, current_row))
+                        Coin(self, col, row, x, y,
+                             self.all_sprites, self.coins)
+
+    def is_cell_in_dis_range(self, col, row):
+        if self.is_cell_in_level_range(col, row) and \
+                col ** 2 + row ** 2 > 2:
+            return True
+        return False
+
+    def is_cell_in_level_range(self, col, row):
+        if 0 <= col < self.level_map.width and \
+                0 <= row < self.level_map.height:
+            return True
+        return False
 
     def get_cords_for_movement_circles(self, cell):
         x, y = self.get_cords_for_block((cell[0], cell[1]))
@@ -384,10 +510,18 @@ class Level:
         return x, y
 
     def get_cords_for_player(self, cell):
-        # для корректировки спрайта игрока, нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER
+        # для корректировки спрайта игрока,
+        # нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER
         x, y = self.get_cords_for_block(cell)
         x += MARGIN_LEFT_PLAYER
         y += MARGIN_TOP_PLAYER
+        return x, y
+
+    def get_cords_for_coin(self, cell):
+        x, y = self.get_cords_for_block(cell)
+        x += (SCALED_CUBE_WIDTH - Coin.image.get_width()) // 2
+        y += (SCALED_CUBE_HEIGHT -
+              Coin.image.get_height()) - SCALED_TOP_RECT_HEIGHT // 2
         return x, y
 
     def get_cords_for_block(self, cell):

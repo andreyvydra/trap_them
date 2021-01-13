@@ -116,6 +116,7 @@ def game():
             level.player.cage_distance = cage_dis
             level.manager = game_manager
             save.save_game(level)
+            save
 
         elif level.game_over and level.level_number == 10:
             update_db(level, level_complete=True)

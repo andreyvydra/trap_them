@@ -25,14 +25,14 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class Block(Sprite):
-    '''Класс блоков.'''
+    """Класс блоков."""
 
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(image, col, row, x, y, *groups)
 
 
 class Floor(Block):
-    '''
+    """
     Класс спрайтов пола.
 
     Attributes:
@@ -43,7 +43,7 @@ class Floor(Block):
     Methods:
         check_collide_rop_rect(mouse_pos): проверка позиции мыши
          на пересечение с верхним прямоугольником спрайта пола
-    '''
+    """
 
     images = {0: pygame.image.load('sprites/floor/floor-0-0.png'),
               1: pygame.image.load('sprites/floor/floor-1-0.png'),
@@ -58,7 +58,7 @@ class Floor(Block):
                                          SCALED_TOP_RECT_HEIGHT)
 
     def check_collide_top_rect(self, mouse_pos):
-        '''
+        """
         Проверка позиции мыши на
          пересечение с верхним прямоугольником спрайта пола.
 
@@ -68,7 +68,7 @@ class Floor(Block):
         Return:
             result(bool): возвращает True,
              если точка лежит в верхнем прямоугольнике, иначе False
-        '''
+        """
 
         x, y = abs(self.top_rect.centerx - mouse_pos[0]), \
                abs(self.top_rect.centery - mouse_pos[1])
@@ -81,7 +81,7 @@ class Floor(Block):
 
 
 class Player(Sprite):
-    '''
+    """
     Класс игрока.
 
     Attributes:
@@ -105,7 +105,7 @@ class Player(Sprite):
         change_col_and_row(cell): изменить col, row игрока
         update(*args, **kwargs): update игрока
         move(cell): перемещение в клетку cell
-    '''
+    """
 
     img = pygame.image.load('sprites/gg_sprites.png')
 
@@ -131,24 +131,24 @@ class Player(Sprite):
         self.cage_distance = cage_distance
 
     def change_cords(self, x, y):
-        '''
+        """
         Изменение координат спрайта.
 
         Arguments:
             x: координата по x
             y: координата по y
-        '''
+        """
 
         self.rect.x = x
         self.rect.y = y
 
     def change_col_and_row(self, cell):
-        '''
+        """
         Изменяет col, row, drawing_col, drawing_row спрайта.
 
         Arguments:
             cell(tuple(int, int)): кортеж с координатами x и y
-        '''
+        """
 
         self.col = cell[0]
         self.row = cell[1]
@@ -156,7 +156,7 @@ class Player(Sprite):
         self.drawing_row = self.row + SECOND_LAYER
 
     def update(self, *args, **kwargs):
-        '''Update спрайта игрока.'''
+        """Update спрайта игрока."""
 
         if self.steps == 0:
             self.selected = False
@@ -209,7 +209,7 @@ class Player(Sprite):
                                     all(list(map(lambda x: not isinstance(x, Cage),
                                                  chosen_cell[1])))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
-                                if cell is not None and self.coins > 0:
+                                if self.coins > 0:
                                     self.coins -= 1
                                     self.steps -= 1
                                     Cage(self.level, *cell,
@@ -224,12 +224,12 @@ class Player(Sprite):
                 self.last_click += 1000 // FPS
 
     def move(self, cell):
-        '''
+        """
         Перемещение спрайта игрока.
 
         Arguments:
             cell(tuple(int, int)): кортеж с координатами клетки
-        '''
+        """
         self.change_col_and_row(cell)
         x, y = self.level.get_cords_for_player((self.drawing_col,
                                                 self.drawing_row))
@@ -237,7 +237,7 @@ class Player(Sprite):
 
 
 class Cage(Sprite):
-    '''
+    """
     Класс клетки.
 
     Attributes:
@@ -252,7 +252,7 @@ class Cage(Sprite):
 
     Methods:
         update(): update клетки
-    '''
+    """
 
     image = pygame.image.load('sprites/cage.png')
     trap_image = pygame.image.load('sprites/trap.png')
@@ -275,7 +275,7 @@ class Cage(Sprite):
         self.top_rect_height = self.image.get_height() // 2
 
     def update(self, *args, **kwargs):
-        '''Update спрайта клетки'''
+        """Update спрайта клетки"""
 
         trapped_characters_cell = \
             self.level.sprites_arr[self.row][self.col]
@@ -358,7 +358,7 @@ class Cage(Sprite):
 
 
 class Coin(Sprite):
-    '''
+    """
     Класс монет.
 
     Attributes:
@@ -370,7 +370,7 @@ class Coin(Sprite):
 
     Methods:
         update(): update спрайта монеты
-    '''
+    """
     image = pygame.image.load('sprites/coin.png')
 
     def __init__(self, level, col, row, x, y, *groups):
@@ -382,7 +382,7 @@ class Coin(Sprite):
         self.pick_up_sound.set_volume(0.05)
 
     def update(self, *args, **kwargs):
-        '''Update спрайта монеты'''
+        """Update спрайта монеты"""
         if self.level.player.col == self.col and \
                 self.level.player.row == self.row:
             self.pick_up_sound.play()
@@ -395,7 +395,7 @@ class Coin(Sprite):
 
 
 class Mob(Sprite):
-    '''
+    """
     Класс мобов.
 
     Attributes:
@@ -406,7 +406,7 @@ class Mob(Sprite):
         damage(int): урон, который наносит моб
         coins(int): количество монет за поимку моба
         step(int): количество шагов
-    '''
+    """
     img = pygame.image.load('sprites/mob.png')
 
     def __init__(self, level, col, row, x, y, *groups,
@@ -423,7 +423,7 @@ class Mob(Sprite):
         self.step = step
 
     def update(self, *args, **kwargs):
-        '''Update мобов'''
+        """Update мобов"""
         path = []
         if not self.level.is_player_turn:
             self.target = self.level.player
@@ -490,9 +490,8 @@ class Mob(Sprite):
                 self.level.events['health_down'] += 1
                 return
 
-
     def voln(self, x, y, x1, y1):
-        '''
+        """
         Алгоритм поиска пути к игроку
 
         Arguments:
@@ -503,7 +502,7 @@ class Mob(Sprite):
 
         Return:
              path(arr[int, int]): массив с координатами пути
-        '''
+        """
         path = []
         board = []
         # в матрице задаётся начальное расстояние = 1000 для обычных клеток
@@ -530,9 +529,8 @@ class Mob(Sprite):
             end_cur -= 1
         return path[::-1]
 
-
     def get_to_all_neighbors(self, row, col, board, queue):
-        '''
+        """
         Функция перебора всех соседей по очереди
 
         Arguments:
@@ -543,7 +541,7 @@ class Mob(Sprite):
 
         Return:
             board(arr[int, [int, int]]): возвращает изменённую матрицу
-        '''
+        """
         # board - список, [расстояние от моба, (координаты предыдущей ячейки)]
         if board[row][col][0] == -1 or \
                 row == self.level.level_map.height - 1 and \
@@ -568,39 +566,36 @@ class Mob(Sprite):
                         queue.append((next_row, next_col))
         return board
 
-
     def move(self, cell):
-        '''
+        """
         Перемещение моба
 
         Arguments:
             cell(tuple(int, int)): кортеж координат клетки
-        '''
+        """
         self.change_col_and_row(cell)
         x, y = self.level.get_cords_for_player((self.drawing_col,
                                                 self.drawing_row))
         self.change_cords(x, y)
 
-
     def change_cords(self, x, y):
-        '''
+        """
         Изменение координат спрайта.
 
         Arguments:
             x: координата по x
             y: координата по y
-        '''
+        """
         self.rect.x = x
         self.rect.y = y
 
-
     def change_col_and_row(self, cell):
-        '''
+        """
         Изменяет col, row, drawing_col, drawing_row спрайта.
 
         Arguments:
             cell(tuple(int, int)): кортеж с координатами x и y
-        '''
+        """
         self.col = cell[0]
         self.row = cell[1]
         self.drawing_col = self.col + SECOND_LAYER
