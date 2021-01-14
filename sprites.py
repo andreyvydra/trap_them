@@ -25,14 +25,14 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class Block(Sprite):
-    '''Класс блоков.'''
+    """Класс блоков."""
 
     def __init__(self, image, col, row, x, y, *groups):
         super().__init__(image, col, row, x, y, *groups)
 
 
 class Floor(Block):
-    '''
+    """
     Класс спрайтов пола.
 
     Attributes:
@@ -43,7 +43,8 @@ class Floor(Block):
     Methods:
         check_collide_rop_rect(mouse_pos): проверка позиции мыши
          на пересечение с верхним прямоугольником спрайта пола
-    '''
+    """
+
     images = {0: pygame.image.load('sprites/floor/floor-0-0.png'),
               1: pygame.image.load('sprites/floor/floor-1-0.png'),
               2: pygame.image.load('sprites/floor/floor-2-0.png'),
@@ -57,7 +58,7 @@ class Floor(Block):
                                          SCALED_TOP_RECT_HEIGHT)
 
     def check_collide_top_rect(self, mouse_pos):
-        '''
+        """
         Проверка позиции мыши на
          пересечение с верхним прямоугольником спрайта пола.
 
@@ -67,7 +68,8 @@ class Floor(Block):
         Return:
             result(bool): возвращает True,
              если точка лежит в верхнем прямоугольнике, иначе False
-        '''
+        """
+
         x, y = abs(self.top_rect.centerx - mouse_pos[0]), \
                abs(self.top_rect.centery - mouse_pos[1])
         b = self.top_rect.height / 2
@@ -79,7 +81,7 @@ class Floor(Block):
 
 
 class Player(Sprite):
-    '''
+    """
     Класс игрока.
 
     Attributes:
@@ -103,7 +105,8 @@ class Player(Sprite):
         change_col_and_row(cell): изменить col, row игрока
         update(*args, **kwargs): update игрока
         move(cell): перемещение в клетку cell
-    '''
+    """
+
     img = pygame.image.load('sprites/gg_sprites.png')
 
     def __init__(self, level, col, row, x, y, *groups,
@@ -128,30 +131,33 @@ class Player(Sprite):
         self.cage_distance = cage_distance
 
     def change_cords(self, x, y):
-        '''
+        """
         Изменение координат спрайта.
 
         Arguments:
             x: координата по x
             y: координата по y
-        '''
+        """
+
         self.rect.x = x
         self.rect.y = y
 
     def change_col_and_row(self, cell):
-        '''
+        """
         Изменяет col, row, drawing_col, drawing_row спрайта.
 
         Arguments:
             cell(tuple(int, int)): кортеж с координатами x и y
-        '''
+        """
+
         self.col = cell[0]
         self.row = cell[1]
         self.drawing_col = self.col + SECOND_LAYER
         self.drawing_row = self.row + SECOND_LAYER
 
     def update(self, *args, **kwargs):
-        '''Update спрайта игрока.'''
+        """Update спрайта игрока."""
+
         if self.steps == 0:
             self.selected = False
         if self.level.is_player_turn:
@@ -175,14 +181,16 @@ class Player(Sprite):
                                         abs(cell[0] - self.col) \
                                         + abs(cell[1] - self.row) == 1 and \
                                         mobs_count == 0 and self.selected:
-                                    self.level.sprites_arr[cell[1]][cell[0]][1].append(self)
-                                    self.level.sprites_arr[self.row][self.col][1] = \
+                                    s_arr = self.level.sprites_arr
+                                    s_arr[cell[1]][cell[0]][1].append(self)
+                                    s_arr[self.row][self.col][1] = \
                                         list(filter(lambda x: x != self,
                                                     [character for character in
-                                                     self.level.sprites_arr[self.row][self.col][1]]))
+                                                     s_arr[self.row][self.col][1]]))
                                     self.steps -= 1
                                     self.move(cell)
                                     self.level.events['done_moves'] += 1
+
                         elif args[0].button == 3 and not self.selected:
                             # cell хранит позицию на поле,
                             # а starting_cell для эффекта падения клетки
@@ -190,21 +198,24 @@ class Player(Sprite):
                                 self.level.get_cell_for_first_layer(args[0].pos)
                             # расстояние рассматривается по количеству кругов,
                             # поэтому учитываем диагонали
-                            if cell is not None and \
-                                    (cell[1] - self.row) ** 2 + \
-                                    (cell[0] - self.col) ** 2 <= \
-                                    2 * self.cage_distance ** 2 and \
-                                    (cell[1] - self.row) ** 2 + \
-                                    (cell[0] - self.col) ** 2 > 2 and \
+                            row_check = (cell[1] - self.row) ** 2
+                            col_check = (cell[0] - self.col) ** 2
+                            check_cage_dist = 2 * self.cage_distance ** 2
+                            chosen_cell = \
+                                self.level.sprites_arr[cell[1]][cell[0]]
+                            if (cell is not None and
+                                    row_check + col_check <= check_cage_dist and
+                                    row_check + col_check > 2 and
                                     all(list(map(lambda x: not isinstance(x, Cage),
-                                                 self.level.sprites_arr[cell[1]][cell[0]][1]))):
+                                                 chosen_cell[1])))):
                                 staring_cell = cell[0] - 4, cell[1] - 4
-                                if cell is not None and self.coins > 0:
+                                if self.coins > 0:
                                     self.coins -= 1
                                     self.steps -= 1
                                     Cage(self.level, *cell,
                                          *self.level.get_cords_for_block(staring_cell),
-                                         self.level.all_sprites, self.level.cages)
+                                         self.level.all_sprites,
+                                         self.level.cages)
                                     self.level.events['used_traps'] += 1
 
                 self.last_click = 0
@@ -213,12 +224,12 @@ class Player(Sprite):
                 self.last_click += 1000 // FPS
 
     def move(self, cell):
-        '''
+        """
         Перемещение спрайта игрока.
 
         Arguments:
             cell(tuple(int, int)): кортеж с координатами клетки
-        '''
+        """
         self.change_col_and_row(cell)
         x, y = self.level.get_cords_for_player((self.drawing_col,
                                                 self.drawing_row))
@@ -226,7 +237,7 @@ class Player(Sprite):
 
 
 class Cage(Sprite):
-    '''
+    """
     Класс клетки.
 
     Attributes:
@@ -241,7 +252,8 @@ class Cage(Sprite):
 
     Methods:
         update(): update клетки
-    '''
+    """
+
     image = pygame.image.load('sprites/cage.png')
     trap_image = pygame.image.load('sprites/trap.png')
 
@@ -263,31 +275,35 @@ class Cage(Sprite):
         self.top_rect_height = self.image.get_height() // 2
 
     def update(self, *args, **kwargs):
-        '''Update спрайта клетки'''
+        """Update спрайта клетки"""
+
+        trapped_characters_cell = \
+            self.level.sprites_arr[self.row][self.col]
         if not self.is_fallen:
             self.level.cages.add(self)
             self.rect.y -= self.top_rect_height
-            if self.level.sprites_arr[self.row][self.col][1]:
+            if trapped_characters_cell[1]:
                 self.rect.y += self.velocity // FPS
-                floor = self.level.sprites_arr[self.row][self.col][0]
+                floor = trapped_characters_cell[0]
                 if self.rect.colliderect(floor.rect):
                     self.rect.y -= self.velocity // FPS
                     self.is_fallen = True
 
             else:
-                block = self.level.sprites_arr[self.row][self.col][0]
+                block = trapped_characters_cell[0]
                 self.rect.y = block.rect.y - self.image.get_height()
                 self.is_fallen = True
                 self.kill()
                 self.level.traps.add(self)
                 self.level.all_sprites.add(self)
                 self.image = Cage.trap_image.copy()
-                self.level.sprites_arr[self.row][self.col][1].append(self)
+                trapped_characters_cell[1].append(self)
             self.rect.y += self.top_rect_height
 
-        elif self.level.sprites_arr[self.row][self.col][1] and \
-                (not isinstance(self.level.sprites_arr[self.row][self.col][1][0], Cage) or
-                 len(self.level.sprites_arr[self.row][self.col][1]) > 1):
+        elif (trapped_characters_cell[1] and
+              (not isinstance(trapped_characters_cell[1][0], Cage) or
+               len(trapped_characters_cell[1]) > 1)):
+
             self.image = Cage.image.copy()
             # для дальнейшей прорисовки нужно убрать клетку из массива
             self.level.sprites_arr[self.row][self.col][1] = \
@@ -305,12 +321,14 @@ class Cage(Sprite):
                         # выбираем для анимации один спрайт
                         if not character_for_animation:
                             character_for_animation = trapped_character
-                            self.level.player.coins += character_for_animation.coins
+                            self.level.player.coins += \
+                                character_for_animation.coins
                             continue
                         # остальные спрайты просто убиваем
                         trapped_character.kill()
                         if isinstance(trapped_character, Mob):
                             self.level.player.coins += trapped_character.coins
+                            self.level.events['locked_up_mafia'] += 1
 
                 timer = 0
                 alpha_channel = 255
@@ -327,13 +345,20 @@ class Cage(Sprite):
                 row, col = character_for_animation.row, \
                            character_for_animation.col
                 self.level.sprites_arr[row][col][1] = []
+                # так как игрок может быть один на клетке,
+                # можно проверять только спрайт для анимации
+                if isinstance(character_for_animation, Player):
+                    self.level.player.health = 0
+                    self.level.game_over = True
+                else:
+                    self.level.events['locked_up_mafia'] += 1
+
                 character_for_animation.kill()
-                self.level.events['locked_up_mafia'] += 1
                 self.kill()
 
 
 class Coin(Sprite):
-    '''
+    """
     Класс монет.
 
     Attributes:
@@ -345,7 +370,7 @@ class Coin(Sprite):
 
     Methods:
         update(): update спрайта монеты
-    '''
+    """
     image = pygame.image.load('sprites/coin.png')
 
     def __init__(self, level, col, row, x, y, *groups):
@@ -357,7 +382,7 @@ class Coin(Sprite):
         self.pick_up_sound.set_volume(0.05)
 
     def update(self, *args, **kwargs):
-        '''Update спрайта монеты'''
+        """Update спрайта монеты"""
         if self.level.player.col == self.col and \
                 self.level.player.row == self.row:
             self.pick_up_sound.play()
@@ -370,7 +395,7 @@ class Coin(Sprite):
 
 
 class Mob(Sprite):
-    '''
+    """
     Класс мобов.
 
     Attributes:
@@ -381,7 +406,7 @@ class Mob(Sprite):
         damage(int): урон, который наносит моб
         coins(int): количество монет за поимку моба
         step(int): количество шагов
-    '''
+    """
     img = pygame.image.load('sprites/mob.png')
 
     def __init__(self, level, col, row, x, y, *groups,
@@ -398,7 +423,7 @@ class Mob(Sprite):
         self.step = step
 
     def update(self, *args, **kwargs):
-        '''Update мобов'''
+        """Update мобов"""
         path = []
         if not self.level.is_player_turn:
             self.target = self.level.player
@@ -413,38 +438,43 @@ class Mob(Sprite):
             # а max исключает вариант при отрицательном перемещении
             # min исключает ход правее/выше последней ячейк
             if self.level.difficulty == 1 or not path:
-                delta_row, delta_col = (max(min(self.target.row - self.row,
-                                                self.step),
-                                            -self.step)
-                                        if self.target.row != self.row else 0,
-                max(min(self.level.player.col - self.col, self.step),
-                    -self.step) if self.level.player.col != self.col
-                                        else 0)
+                delta_row = (max(
+                    min(self.target.row - self.row, self.step), -self.step)
+                             if self.target.row != self.row else 0)
+                delta_col = (max(
+                    min(self.target.col - self.col, self.step), -self.step)
+                             if self.target.col != self.col else 0)
 
                 # также на мирном уровне сложности delta_row обнуляется,
                 # при разнице в обеих координатах
                 if abs(delta_col) + abs(delta_row) > 1:
                     delta_row = 0
 
+                new_row = self.row + delta_row
+                new_col = self.col + delta_col
+
                 # далее проверяем получившиеся row и col,
                 # max исключает ход левее/ниже первой ячейки, а
-                row = min(max(self.row + delta_row, 0),
-                          self.level.level_map.height - 1)
-                col = min(max(self.col + delta_col, 0),
-                          self.level.level_map.width - 1)
+                row = min(
+                    max(new_row, 0), self.level.level_map.height - 1)
+                col = min(
+                    max(new_col, 0), self.level.level_map.width - 1)
 
                 cells = [(col, row)]
 
-            self.level.sprites_arr[self.row][self.col][1] =\
+            cur_cell = self.level.sprites_arr[self.row][self.col]
+            cur_cell[1] = \
                 list(filter(lambda x: x != self,
-                [character for character in
-                self.level.sprites_arr[self.row][self.col][1]]))
+                            [character for character in
+                             cur_cell[1]]))
+
             for cell in cells:
                 self.move(cell)
 
             # в этом случае SECOND_LAYER не нужно учитывать
-            self.level.sprites_arr[self.row][self.col][1].append(self)
-            block = self.level.sprites_arr[self.row][self.col][0]
+            new_cell = self.level.sprites_arr[cell[1]][cell[0]]
+            new_cell[1].append(self)
+            block = new_cell[0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
                 self.level.player.health = \
@@ -453,15 +483,15 @@ class Mob(Sprite):
                     self.level.game_over = True
                     self.level.player.kill()
                 self.kill()
-                self.level.sprites_arr[self.row][self.col][1] = \
+                new_cell[1] = \
                     list(filter(lambda x: x != self,
-                    [character for character in
-                     self.level.sprites_arr[self.row][self.col][1]]))
+                                [character for character in
+                                 new_cell[1]]))
                 self.level.events['health_down'] += 1
                 return
 
     def voln(self, x, y, x1, y1):
-        '''
+        """
         Алгоритм поиска пути к игроку
 
         Arguments:
@@ -472,7 +502,7 @@ class Mob(Sprite):
 
         Return:
              path(arr[int, int]): массив с координатами пути
-        '''
+        """
         path = []
         board = []
         # в матрице задаётся начальное расстояние = 1000 для обычных клеток
@@ -480,10 +510,10 @@ class Mob(Sprite):
         for row in range(self.level.level_map.height):
             board.append([])
             for col in range(self.level.level_map.width):
+                cur_cell = self.level.sprites_arr[row][col]
                 board[row].append([-1, (row, col)]
-                                  if self.level.sprites_arr[row][col][1] and
-                    isinstance(self.level.sprites_arr[row][col][1][0], Cage)
-                    else [1000, (row, col)])
+                                  if cur_cell[1] and isinstance(cur_cell[1][0], Cage)
+                                  else [1000, (row, col)])
             # так как у нас координаты заданы по-другому в загрузке карты
             board[row] = board[row]
         queue = deque()
@@ -500,7 +530,7 @@ class Mob(Sprite):
         return path[::-1]
 
     def get_to_all_neighbors(self, row, col, board, queue):
-        '''
+        """
         Функция перебора всех соседей по очереди
 
         Arguments:
@@ -511,9 +541,9 @@ class Mob(Sprite):
 
         Return:
             board(arr[int, [int, int]]): возвращает изменённую матрицу
-        '''
+        """
         # board - список, [расстояние от моба, (координаты предыдущей ячейки)]
-        if board[row][col][0] == -1 or\
+        if board[row][col][0] == -1 or \
                 row == self.level.level_map.height - 1 and \
                 col == self.level.level_map.width - 1:
             return board
@@ -524,48 +554,48 @@ class Mob(Sprite):
             for delta_row, delta_col in zip(delta_y, delta_x):
                 if 0 <= delta_row + row < self.level.level_map.height and \
                         0 <= delta_col + col < self.level.level_map.width:
-                    if board[row + delta_row][col + delta_col][0] >\
-                            board[row][col][0] + 1 and \
-                            (board[row + delta_row][col + delta_col][0]
-                             != -1):
+                    next_row = delta_row + row
+                    next_col = delta_col + col
+                    if (board[next_row][next_col][0] > board[row][col][0] + 1
+                            and board[next_row][next_col][0] != -1):
                         # сохраняем предыдущую ячейку, вместе с расстоянием
-                        board[row + delta_row][col + delta_col] = \
-                            [board[row][col][0] + 1, (row, col)]
+                        board[next_row][next_col] = [board[row][col][0] + 1,
+                                                     (row, col)]
                         # если расстояние для текущй клетки обновлено,
                         # нужно пройти по всем соседей текущей клетки
-                        queue.append((row + delta_row, col + delta_col))
+                        queue.append((next_row, next_col))
         return board
 
     def move(self, cell):
-        '''
+        """
         Перемещение моба
 
         Arguments:
             cell(tuple(int, int)): кортеж координат клетки
-        '''
+        """
         self.change_col_and_row(cell)
         x, y = self.level.get_cords_for_player((self.drawing_col,
                                                 self.drawing_row))
         self.change_cords(x, y)
 
     def change_cords(self, x, y):
-        '''
+        """
         Изменение координат спрайта.
 
         Arguments:
             x: координата по x
             y: координата по y
-        '''
+        """
         self.rect.x = x
         self.rect.y = y
 
     def change_col_and_row(self, cell):
-        '''
+        """
         Изменяет col, row, drawing_col, drawing_row спрайта.
 
         Arguments:
             cell(tuple(int, int)): кортеж с координатами x и y
-        '''
+        """
         self.col = cell[0]
         self.row = cell[1]
         self.drawing_col = self.col + SECOND_LAYER

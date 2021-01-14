@@ -1,13 +1,8 @@
 import sqlite3
+import sys
 
-import pygame
-import pygame_gui
-import pickle
-from map import *
-from settings import *
 from menu import *
 from save import *
-import sys
 
 
 def game():
@@ -65,6 +60,19 @@ def game():
 
         elif level.game_over and level.level_number != 10:
             update_db(level, level_complete=True)
+
+            font = pygame.font.Font(None, 50)
+            text = font.render(f"Level {level.level_number} is clear",
+                               True, (255, 255, 255))
+            text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
+            text_y = 100
+            level.screen.blit(text, (text_x, text_y))
+            level.render()
+            pygame.display.flip()
+            ping_for_message = 10000000
+            while ping_for_message != 0:
+                ping_for_message -= 1
+            level.screen.fill('#282828')
 
             number_of_level = level.level_number
             upgrades_res = upgrades()
