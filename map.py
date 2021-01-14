@@ -17,6 +17,7 @@ class Map:
         width(int): Ширина карты
         height(int): Высота карты
         num_characters(int): Количество персонажей на карте
+        type_of_block(int): Тип блока
 
     Methods:
         load_map(): диспетчер для вызова функций подгрузки
@@ -33,6 +34,7 @@ class Map:
         self.width = None
         self.height = None
         self.num_characters = None
+        self.type_of_block = None
         self.create_map()
 
         if first_layer is None:
@@ -81,8 +83,8 @@ class Map:
             self.num_characters = self.width * self.height // 4 + 1
             num_coins = self.width * self.height // 20
         # матрица, где для каждой ячейки хранится row и col
-        type_of_block = randint(0, 3)
-        matrix = [[type_of_block] * self.width for _ in range(self.height)]
+        self.type_of_block = randint(0, 3)
+        matrix = [[self.type_of_block] * self.width for _ in range(self.height)]
         result = []
         with open(self.path_map + '/map.txt', 'w') as current_file:
             for row in range(self.height):
@@ -147,6 +149,8 @@ class Level:
         level_number_text(Surface): надпись с номеров уровня
 
     """
+    backgrounds = {2: pygame.image.load('bgs/level_bg_2.jpg'),
+                   3: pygame.image.load('bgs/level_bg_3.jpg')}
 
     def __init__(self, level_map, screen, level_number=1):
         self.level_map = level_map
@@ -196,6 +200,10 @@ class Level:
 
     def render(self):
         """Рендер всех элементов уровня"""
+        if self.level_map.type_of_block in Level.backgrounds:
+            bg = Level.backgrounds[self.level_map.type_of_block]
+            self.screen.blit(bg, (0, 0))
+
         self.floor.draw(self.screen)
         self.coins.draw(self.screen)
         self.traps.draw(self.screen)
@@ -342,6 +350,12 @@ class Level:
         else:
             self.update_for_enemies_turn()
 
+    def update_text_number_of_level(self, number_of_level):
+        self.level_number = number_of_level
+        self.level_number_text = self. \
+            font.render(f'Level {self.level_number}',
+                        True, (255, 255, 255))
+
     def update_for_players_turn(self, *args, **kwargs):
         """Обновление уровня вовремя хода игрока"""
         self.all_sprites.update(*args, **kwargs)
@@ -404,8 +418,7 @@ class Level:
             data(list): Список с данными из сохранения
         """
         level_data, number_of_level = data[0], data[1]
-        self.level_number = number_of_level
-        self.update_text_number_of_level()
+        self.update_text_number_of_level(number_of_level)
         self.load_floor(level_data['floor'])
         self.load_enemies(level_data['enemies'])
         self.load_coins(level_data['coins'])
@@ -544,7 +557,7 @@ class Level:
             True or False
         """
         if self.is_cell_in_level_range(col, row) and \
-                (col - self.player.col) ** 2 +\
+                (col - self.player.col) ** 2 + \
                 (row - self.player.row) ** 2 > 2:
             return True
         return False
