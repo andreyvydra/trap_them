@@ -1,13 +1,8 @@
 import sqlite3
+import sys
 
-import pygame
-import pygame_gui
-import pickle
-from map import *
-from settings import *
 from menu import *
 from save import *
-import sys
 
 
 def game():

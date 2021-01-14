@@ -1,9 +1,6 @@
-from itertools import repeat
+from random import randrange, randint, sample
 
-from settings import *
 from sprites import *
-from random import sample, randrange, randint
-import pygame
 
 
 class Map:
@@ -149,9 +146,6 @@ class Level:
         font(Font): шрифт для надписей в игре
         level_number_text(Surface): надпись с номеров уровня
 
-    Methods:
-
-
     """
 
     def __init__(self, level_map, screen, level_number=1):
@@ -201,6 +195,7 @@ class Level:
                    True, (255, 255, 255))
 
     def render(self):
+        """Рендер всех элементов уровня"""
         self.floor.draw(self.screen)
         self.coins.draw(self.screen)
         self.traps.draw(self.screen)
@@ -234,6 +229,7 @@ class Level:
         self.render_level_of_number()
 
     def render_level_of_number(self):
+        """Рендер ноиера уровня"""
         if self.alpha_channel_for_lvl_number > 0:
             self.level_number_text. \
                 set_alpha(self.alpha_channel_for_lvl_number)
@@ -246,6 +242,7 @@ class Level:
             self.screen.blit(self.level_number_text, (x, y))
 
     def render_mp(self):
+        """Рендер кол-ва очков передвижения"""
         for i in range(self.player.max_steps):
             if i < self.player.steps:
                 pygame.draw.rect(self.screen, (15, 82, 186),
@@ -254,6 +251,7 @@ class Level:
                              (20 + (i * 60), 50, 60, 25), 2)
 
     def render_cage_cells(self):
+        """Рендер клеток, где можно расположить ловушки"""
         if self.player.alive() and not self.player.selected and \
                 self.player.steps:
             x = [-1, -1, 0, -1, 0, 1, 1, 1]
@@ -273,6 +271,7 @@ class Level:
                                                (cur_x, cur_y), radius)
 
     def render_number_of_coins(self):
+        """Рендер количества монет"""
         text = self.font.render(f"{self.player.coins}", True,
                                 (212, 175, 55))
         text_w = text.get_width()
@@ -281,6 +280,7 @@ class Level:
         self.screen.blit(text, (text_x, text_y))
 
     def render_health(self):
+        """Рендер здоровья"""
         for i in range(self.player.max_health):
             if i + 1 <= self.player.health:
                 pygame.draw.rect(self.screen, (98, 212, 77),
@@ -289,6 +289,7 @@ class Level:
                              (20 + (i * 60), 20, 60, 25), 2)
 
     def render_players_moves(self):
+        """Рендер клеток, на которое можно переместиться игроку"""
         if self.player.alive() and self.player.selected and \
                 self.player.steps:
             radius = 7
@@ -305,6 +306,7 @@ class Level:
                                            (cur_x, cur_y), radius)
 
     def render_num_characters(self):
+        """Рендер количества персонажей"""
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 if len(self.sprites_arr[row][col][1]) > 1:
@@ -329,8 +331,10 @@ class Level:
                         self.screen.blit(text, (text_x, text_y))
 
     def update(self, *args, **kwargs):
+        """Обновление уровня"""
         if not any(filter(lambda x: x.alive(), self.enemies)):
             self.game_over = True
+            return
         td = args[1]
         self.manager.update(td)
         if self.is_player_turn:
@@ -339,6 +343,7 @@ class Level:
             self.update_for_enemies_turn()
 
     def update_for_players_turn(self, *args, **kwargs):
+        """Обновление уровня вовремя хода игрока"""
         self.all_sprites.update(*args, **kwargs)
         if self.is_pressed_end_move_btn:
             self.is_pressed_end_move_btn = False
@@ -357,6 +362,7 @@ class Level:
             self.screen.fill('#282828')
 
     def update_for_enemies_turn(self):
+        """Обновление уровня вовремя хода врага"""
         self.enemies.update()
         self.cages.update()
         self.traps.update()
@@ -380,15 +386,23 @@ class Level:
             self.player.is_pressed_end_move_btn = False
 
     def get_events(self):
+        """Получение всех эвентов"""
         return self.events
 
     def load_sprites(self):
-        # Подгрузка спрайтов по отдельным layer, соответственно нашей карте
+        """Подгрузка спрайтов по отдельным layer,
+         соответственно нашей карте"""
         self.load_sprites_from_first_layer()
         self.load_sprites_from_second_layer()
 
     def load_data(self, data):
-        # Поочрёдно загрузить все типы объектов из даты сохранения
+        """
+        Поочрёдно загрузить все типы (кроме игрока)
+        объектов из даты сохранения
+
+        Arguments:
+            data(list): Список с данными из сохранения
+        """
         level_data, number_of_level = data[0], data[1]
         self.level_number = number_of_level
         self.update_text_number_of_level()
@@ -398,6 +412,13 @@ class Level:
         self.load_cages(level_data['cages'])
 
     def load_player(self, data):
+        """
+        Подгрузка игрока
+
+        Arguments:
+            data(dict): Словарь с данными об игроке из сохранения
+        """
+
         col, row = data['col'], data['row']
         drawing_col, drawing_row = col + SECOND_LAYER, row + SECOND_LAYER
         x, y = self.get_cords_for_player((drawing_col, drawing_row))
@@ -411,6 +432,12 @@ class Level:
         self.sprites_arr[row][col][1].append(self.player)
 
     def load_coins(self, coins):
+        """
+        Подгрузка монет
+
+        Arguments:
+            coins(dict): Словарь с данными о монетах
+        """
         for coin in coins:
             col, row = coin['col'], coin['row']
             drawing_col = col + SECOND_LAYER
@@ -420,6 +447,12 @@ class Level:
                  self.all_sprites, self.coins)
 
     def load_cages(self, cages):
+        """
+        Подгрузка клеток
+
+        Arguments:
+            cages(dict): Словарь с данными о клетках
+        """
         for cage in cages:
             col, row = cage['col'], cage['row']
             drawing_col = col + SECOND_LAYER
@@ -429,6 +462,12 @@ class Level:
                  self.all_sprites, self.floor)
 
     def load_enemies(self, enemies):
+        """
+        Подгрузка целей
+
+        Arguments:
+            enemies(dict): Словарь с данными о целях
+        """
         for enemy in enemies:
             col, row = enemy['col'], enemy['row']
             drawing_col = col + SECOND_LAYER
@@ -441,6 +480,12 @@ class Level:
             self.sprites_arr[row][col][1].append(new_mob)
 
     def load_floor(self, floor):
+        """
+        Подгрузка пола
+
+        Arguments:
+            floor(dict): Словарь с данными о поле
+        """
         for block in floor:
             col, row = block['col'], block['row']
             x, y = self.get_cords_for_block((col, row))
@@ -450,12 +495,8 @@ class Level:
                                   type_of_block=type_of_block)
             self.sprites_arr[row][col][0] = current_floor
 
-    def update_text_number_of_level(self):
-        self.level_number_text = self.font. \
-            render(f'Level {str(self.level_number)}',
-                   True, (255, 255, 255))
-
     def load_sprites_from_first_layer(self):
+        """Подгрузка спрайтов из первого слоя"""
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 x, y = self.get_cords_for_block((col, row))
@@ -466,6 +507,7 @@ class Level:
                 self.sprites_arr[row][col][0] = current_floor
 
     def load_sprites_from_second_layer(self):
+        """Подгрузка спрайтов из второго слоя"""
         for row in range(self.level_map.height):
             for col in range(self.level_map.width):
                 sprite_num = self.level_map.second_layer[row][col]
@@ -491,6 +533,16 @@ class Level:
                              self.all_sprites, self.coins)
 
     def is_cell_in_dis_range(self, col, row):
+        """
+        Определяет лежит ли клетка в промежутке dis_range
+
+        Arguments:
+            col(int): столбец
+            row(int): строка
+
+        Return:
+            True or False
+        """
         if self.is_cell_in_level_range(col, row) and \
                 (col - self.player.col) ** 2 +\
                 (row - self.player.row) ** 2 > 2:
@@ -498,18 +550,46 @@ class Level:
         return False
 
     def is_cell_in_level_range(self, col, row):
+        """
+        Определяет лежит ли клетка в уровне
+
+        Arguments:
+            col(int): столбец
+            row(int): строка
+
+        Return:
+            True or False
+        """
         if 0 <= col < self.level_map.width and \
                 0 <= row < self.level_map.height:
             return True
         return False
 
     def get_cords_for_movement_circles(self, cell):
+        """
+        Возвращает координату для 'кругов передвижения'
+
+        Arguments:
+            cell(tuple): клетка
+
+        Return:
+            x, y
+        """
         x, y = self.get_cords_for_block((cell[0], cell[1]))
         x += SCALED_TOP_RECT_WIDTH // 2
         y += SCALED_TOP_RECT_HEIGHT // 2
         return x, y
 
     def get_cords_for_player(self, cell):
+        """
+        Возвращает координату для игрока
+
+        Arguments:
+            cell(tuple): клетка
+
+        Return:
+            x, y
+        """
         # для корректировки спрайта игрока,
         # нужно добавлять MARGIN_WIDTH_PLAYER и MARGIN_HEIGHT_PLAYER
         x, y = self.get_cords_for_block(cell)
@@ -518,6 +598,15 @@ class Level:
         return x, y
 
     def get_cords_for_coin(self, cell):
+        """
+        Возвращает координату для монеты
+
+        Arguments:
+            cell(tuple): клетка
+
+        Return:
+            x, y
+        """
         x, y = self.get_cords_for_block(cell)
         x += (SCALED_CUBE_WIDTH - Coin.image.get_width()) // 2
         y += (SCALED_CUBE_HEIGHT -
@@ -525,17 +614,44 @@ class Level:
         return x, y
 
     def get_cords_for_block(self, cell):
+        """
+        Возвращает координату для блока
+
+        Arguments:
+            cell(tuple): клетка
+
+        Return:
+            x, y
+        """
         col, row = cell
         x = self.x + self.delta_x * (row - col)
         y = self.y + self.delta_y * (row + col)
         return x, y
 
     def get_cell_for_second_layer(self, cords):
+        """
+        Возвращает клетку по координате для второго слоя
+
+        Arguments:
+            cords(tuple): клетка
+
+        Return:
+            col, row
+        """
         cell = self.get_cell_for_first_layer(cords)
         if cell is not None:
             return cell[0] + SECOND_LAYER, cell[1] + SECOND_LAYER
 
     def get_cell_for_first_layer(self, cords):
+        """
+        Возвращает клетку по координате для первого слоя
+
+        Arguments:
+            cords(tuple): клетка
+
+        Return:
+            tuple(col, row) or None (если координата не лежит на поле)
+        """
         for block in self.floor:
             if block.check_collide_top_rect(cords):
                 # Не забыть прибавить SECOND_LAYER для корректной отрисовки
