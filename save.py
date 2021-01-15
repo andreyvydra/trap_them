@@ -79,5 +79,6 @@ class Save:
                        'max_health': level.player.max_health,
                        'max_steps': level.player.max_steps,
                        'col': level.player.col,
-                       'row': level.player.row}
+                       'row': level.player.row,
+                       'cage_distance': level.player.cage_distance}
         return player_data

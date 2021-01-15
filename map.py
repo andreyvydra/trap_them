@@ -405,7 +405,6 @@ class Level:
         """
         level_data, number_of_level = data[0], data[1]
         self.level_number = number_of_level
-        self.update_text_number_of_level()
         self.load_floor(level_data['floor'])
         self.load_enemies(level_data['enemies'])
         self.load_coins(level_data['coins'])
@@ -425,10 +424,12 @@ class Level:
         coins, steps = data['coins'], data['steps']
         max_steps = data['max_steps']
         health, max_health = data['health'], data['max_health']
+        cage_distance = data['cage_distance']
         self.player = Player(self, col, row, x, y,
                              self.all_sprites, steps=steps,
                              coins=coins, health=health,
-                             max_health=max_health, max_steps=max_steps)
+                             max_health=max_health, max_steps=max_steps,
+                             cage_distance=cage_distance)
         self.sprites_arr[row][col][1].append(self.player)
 
     def load_coins(self, coins):
