@@ -385,6 +385,11 @@ class Level:
             self.is_player_turn = True
             self.player.is_pressed_end_move_btn = False
 
+    def update_text_number_of_level(self):
+        self.level_number_text = self. \
+            font.render(f'Level {self.level_number}',
+                        True, (255, 255, 255))
+
     def get_events(self):
         """Получение всех эвентов"""
         return self.events
@@ -405,6 +410,7 @@ class Level:
         """
         level_data, number_of_level = data[0], data[1]
         self.level_number = number_of_level
+        self.update_text_number_of_level()
         self.load_floor(level_data['floor'])
         self.load_enemies(level_data['enemies'])
         self.load_coins(level_data['coins'])
@@ -545,7 +551,7 @@ class Level:
             True or False
         """
         if self.is_cell_in_level_range(col, row) and \
-                (col - self.player.col) ** 2 +\
+                (col - self.player.col) ** 2 + \
                 (row - self.player.row) ** 2 > 2:
             return True
         return False
