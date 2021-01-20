@@ -537,7 +537,7 @@ if __name__ == '__main__':
 
     save = Save('saves/save.pickle')
 
-    bg = pygame.image.load('bgs/menu_bg.jpg')
+    bg = pygame.image.load('bgs/menu_bg.png')
     bg = pygame.transform.scale(bg, SCREEN_SIZE)
 
     is_button_game_pressed = False
