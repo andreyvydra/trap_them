@@ -399,11 +399,6 @@ class Level:
             self.is_player_turn = True
             self.player.is_pressed_end_move_btn = False
 
-    def update_text_number_of_level(self):
-        self.level_number_text = self. \
-            font.render(f'Level {self.level_number}',
-                        True, (255, 255, 255))
-
     def get_events(self):
         """Получение всех эвентов"""
         return self.events
