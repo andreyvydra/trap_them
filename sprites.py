@@ -488,7 +488,13 @@ class Mob(Sprite):
                                 [character for character in
                                  new_cell[1]]))
                 self.level.events['health_down'] += 1
-                return
+            self.level.screen.fill('#282828')
+            self.level.render()
+            pygame.display.flip()
+            ping_for_turn = 5000000
+            while ping_for_turn != 0:
+                ping_for_turn -= 1
+
 
     def voln(self, x, y, x1, y1):
         """
