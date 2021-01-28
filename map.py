@@ -406,6 +406,7 @@ class Level:
                 self.ai_turn_is_ended = True
         else:
             self.check_out_list.clear()
+            self.player.steps = self.player.max_steps
             self.is_player_turn = True
             self.ai_turn_is_ended = False
             self.is_enemies_turn = False
