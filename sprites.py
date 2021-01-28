@@ -479,11 +479,14 @@ class Mob(Sprite):
                     self.level.game_over = True
                     self.level.player.kill()
                 self.kill()
+                new_cell = self.level.sprites_arr[self.row][self.col]
                 new_cell[1] = \
                     list(filter(lambda x: x != self,
                                 [character for character in
                                  new_cell[1]]))
                 self.level.events['health_down'] += 1
+            else:
+                self.level.check_out_list.append(self)
 
     def voln(self, x, y, x1, y1):
         """

@@ -385,19 +385,19 @@ class Level:
         if not self.game_over and self.is_enemies_turn:
             is_all_moved = False
             if self.call_down_for_move_of_enemy <= 0:
-                for n_row, row in enumerate(self.sprites_arr):
-                    for n_col, col in enumerate(row):
-                        enemies = col[1]
-                        if len(enemies) and not is_all_moved:
-                            if enemies[0].__class__ != Player and enemies[0] not in self.check_out_list:
-                                enemy = enemies[0]
-                                idx = self.sprites_arr[enemy.row][enemy.col][1].index(enemy)
-                                del self.sprites_arr[enemy.row][enemy.col][1][idx]
-                                enemy.move((enemy.before_col, enemy.before_row))
-                                self.sprites_arr[enemy.row][enemy.col][1].append(enemy)
-                                self.check_out_list.append(enemy)
-                                is_all_moved = True
+                if len(self.check_out_list):
+                    enemy = self.check_out_list[0]
+                    del self.check_out_list[0]
+                    cur_cell = self.sprites_arr[enemy.row][enemy.col]
+                    cur_cell[1] = \
+                        list(filter(lambda x: x != enemy,
+                                    [character for character in
+                                     cur_cell[1]]))
+                    enemy.move((enemy.before_col, enemy.before_row))
+                    self.sprites_arr[enemy.row][enemy.col][1].append(enemy)
+                    is_all_moved = True
                 if not is_all_moved:
+                    print(1)
                     self.is_enemies_turn = False
                 self.call_down_for_move_of_enemy = 500
             else:
