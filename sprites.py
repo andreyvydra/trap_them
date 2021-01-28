@@ -417,6 +417,8 @@ class Mob(Sprite):
         self.drawing_col = col
         self.drawing_row = row
         self.damage = damage
+        self.before_col = None
+        self.before_row = None
 
         # self.coins отвечает за вознаграждение за поимку
         self.coins = coins
@@ -425,7 +427,7 @@ class Mob(Sprite):
     def update(self, *args, **kwargs):
         """Update мобов"""
         path = []
-        if not self.level.is_player_turn:
+        if not self.level.ai_turn_is_ended and self.level.is_enemies_turn:
             self.target = self.level.player
             if self.level.level_map.difficulty == 2:
                 path = self.voln(self.row, self.col,
@@ -469,7 +471,8 @@ class Mob(Sprite):
                              cur_cell[1]]))
 
             for cell in cells:
-                self.move(cell)
+                self.before_col = cell[0]
+                self.before_row = cell[1]
 
             # в этом случае SECOND_LAYER не нужно учитывать
             new_cell = self.level.sprites_arr[cell[1]][cell[0]]
@@ -488,13 +491,6 @@ class Mob(Sprite):
                                 [character for character in
                                  new_cell[1]]))
                 self.level.events['health_down'] += 1
-            self.level.screen.fill('#282828')
-            self.level.render()
-            pygame.display.flip()
-            ping_for_turn = 5000000
-            while ping_for_turn != 0:
-                ping_for_turn -= 1
-
 
     def voln(self, x, y, x1, y1):
         """

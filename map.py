@@ -172,6 +172,8 @@ class Level:
         self.delta_x = SCALED_CUBE_WIDTH // 2
         self.delta_y = SCALED_TOP_RECT_HEIGHT // 2
 
+        self.call_down_for_move_of_enemy = 500
+
         self.all_sprites = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.floor = pygame.sprite.Group()
@@ -182,6 +184,10 @@ class Level:
         self.is_pressed_end_move_btn = False
         self.is_player_turn = True
         self.game_over = False
+        self.is_enemies_turn = False
+        self.ai_turn_is_ended = False
+
+        self.check_out_list = []
 
         self.manager = None
         self.events = {'picked_up_coins': 0,
@@ -338,6 +344,12 @@ class Level:
                                           text_w + 10, text_h + 5), 1)
                         self.screen.blit(text, (text_x, text_y))
 
+    def render_players_turn(self):
+        text = self.font.render('Your move', True, (0, 255, 0))
+        text_w = text.get_width()
+        x, y = CENTER_POINT[0] - text_w // 2, 20
+        self.screen.blit(text, (x, y))
+
     def update(self, *args, **kwargs):
         """Обновление уровня"""
         if not any(filter(lambda x: x.alive(), self.enemies)):
@@ -348,7 +360,7 @@ class Level:
         if self.is_player_turn:
             self.update_for_players_turn(*args, **kwargs)
         else:
-            self.update_for_enemies_turn()
+            self.update_for_enemies_turn(*args, **kwargs)
 
     def update_text_number_of_level(self, number_of_level):
         self.level_number = number_of_level
@@ -360,43 +372,41 @@ class Level:
         """Обновление уровня вовремя хода игрока"""
         self.all_sprites.update(*args, **kwargs)
         if self.is_pressed_end_move_btn:
-            self.is_pressed_end_move_btn = False
+            self.is_enemies_turn = True
             self.is_player_turn = False
-            font = pygame.font.Font(None, 50)
-            text = font.render("Enemies' move!", True, (100, 255, 100))
-            text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-            text_y = 20
-            self.screen.blit(text, (text_x, text_y))
-            self.render()
-            pygame.display.flip()
-            ping_for_message = 10000000
-            while ping_for_message != 0:
-                ping_for_message -= 1
 
-            self.screen.fill('#282828')
-
-    def update_for_enemies_turn(self):
+    def update_for_enemies_turn(self, *args, **kwargs):
         """Обновление уровня вовремя хода врага"""
         self.enemies.update()
         self.cages.update()
         self.traps.update()
-        if not self.game_over:
-            self.player.steps = self.player.max_steps
-            font = pygame.font.Font(None, 50)
-            text = font.render("Your move!", True, (100, 255, 100))
-            text_x = SCREEN_WIDTH // 2 - text.get_width() // 2
-            text_y = 20
-            self.screen.blit(text, (text_x, text_y))
-            self.is_player_turn = True
-            self.render()
-            pygame.display.flip()
-            ping_for_message = 10000000
-            while ping_for_message != 0:
-                ping_for_message -= 1
-
-            self.screen.fill('#282828')
+        if not self.game_over and self.is_enemies_turn:
+            self.render_players_moves()
+            is_all_moved = False
+            if self.call_down_for_move_of_enemy <= 0:
+                for n_row, row in enumerate(self.sprites_arr):
+                    for n_col, col in enumerate(row):
+                        enemies = col[1]
+                        if len(enemies):
+                            if enemies[0].__class__ != Player and enemies[0] not in self.check_out_list:
+                                enemy = enemies[0]
+                                del self.sprites_arr[enemy.row][enemy.col][1][self.sprites_arr[enemy.row][enemy.col][1].index(enemy)]
+                                enemy.move((enemy.before_col, enemy.before_row))
+                                self.sprites_arr[enemy.row][enemy.col][1].append(enemy)
+                                self.check_out_list.append(enemy)
+                                is_all_moved = True
+                if not is_all_moved:
+                    self.is_enemies_turn = False
+                self.call_down_for_move_of_enemy = 500
+            else:
+                self.call_down_for_move_of_enemy -= 1000 / args[1]
+            if not self.ai_turn_is_ended:
+                self.ai_turn_is_ended = True
         else:
+            self.check_out_list.clear()
             self.is_player_turn = True
+            self.ai_turn_is_ended = False
+            self.is_enemies_turn = False
             self.player.is_pressed_end_move_btn = False
 
     def get_events(self):

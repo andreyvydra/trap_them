@@ -527,7 +527,7 @@ if __name__ == '__main__':
     music.play(-1, 0, 10000)
 
     pygame.display.set_caption("'КУБЫ!'")
-    screen = pygame.display.set_mode(SCREEN_SIZE, flags=pygame.FULLSCREEN)
+    screen = pygame.display.set_mode(SCREEN_SIZE)
 
     clock = pygame.time.Clock()
 
