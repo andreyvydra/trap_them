@@ -396,10 +396,10 @@ class Level:
                     enemy.move((enemy.before_col, enemy.before_row))
                     self.sprites_arr[enemy.row][enemy.col][1].append(enemy)
                     is_all_moved = True
+                    Mob.sound_of_move.play()
                 if not is_all_moved:
-                    print(1)
                     self.is_enemies_turn = False
-                self.call_down_for_move_of_enemy = 500
+                self.call_down_for_move_of_enemy = 1000
             else:
                 self.call_down_for_move_of_enemy -= 1000 / FPS
             if not self.ai_turn_is_ended:

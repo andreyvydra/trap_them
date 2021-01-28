@@ -408,6 +408,9 @@ class Mob(Sprite):
         step(int): количество шагов
     """
     img = pygame.image.load('sprites/mob.png')
+    sound_of_move = pygame.mixer.Sound('sounds/mob/move.ogg')
+    sound_of_hit = pygame.mixer.Sound('sounds/mob/hit.ogg')
+    sound_of_hit.set_volume(0.2)
 
     def __init__(self, level, col, row, x, y, *groups,
                  coins=1, step=1, damage=1):
@@ -473,6 +476,7 @@ class Mob(Sprite):
             block = new_cell[0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
+                Mob.sound_of_hit.play()
                 self.level.player.health = \
                     max(self.level.player.health - self.damage, 0)
                 if self.level.player.health == 0:
