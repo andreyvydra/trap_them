@@ -216,6 +216,7 @@ class Level:
 
         self.render_cage_cells()
         self.render_players_moves()
+        self.render_enemies_turn()
 
         # Алгоритм для корректной отрисовки персонажей и клеток
         cages = {(cage.col, cage.row): cage for cage in self.cages}
@@ -267,7 +268,7 @@ class Level:
     def render_cage_cells(self):
         """Рендер клеток, где можно расположить ловушки"""
         if self.player.alive() and not self.player.selected and \
-                self.player.steps:
+                self.player.steps and self.is_player_turn:
             x = [-1, -1, 0, -1, 0, 1, 1, 1]
             y = [-1, 0, -1, 1, 1, 0, 1, -1]
             radius = 7
@@ -305,7 +306,7 @@ class Level:
     def render_players_moves(self):
         """Рендер клеток, на которое можно переместиться игроку"""
         if self.player.alive() and self.player.selected and \
-                self.player.steps:
+                self.player.steps and self.is_player_turn:
             radius = 7
             x = [-1, 0, 0, 1]
             y = [0, -1, 1, 0]
@@ -344,11 +345,12 @@ class Level:
                                           text_w + 10, text_h + 5), 1)
                         self.screen.blit(text, (text_x, text_y))
 
-    def render_players_turn(self):
-        text = self.font.render('Your move', True, (0, 255, 0))
-        text_w = text.get_width()
-        x, y = CENTER_POINT[0] - text_w // 2, 20
-        self.screen.blit(text, (x, y))
+    def render_enemies_turn(self):
+        if not self.game_over and self.is_enemies_turn:
+            text = self.font.render("Enemies' move", True, (0, 255, 0))
+            text_w = text.get_width()
+            x, y = CENTER_POINT[0] - text_w // 2, 20
+            self.screen.blit(text, (x, y))
 
     def update(self, *args, **kwargs):
         """Обновление уровня"""
@@ -360,7 +362,7 @@ class Level:
         if self.is_player_turn:
             self.update_for_players_turn(*args, **kwargs)
         else:
-            self.update_for_enemies_turn(*args, **kwargs)
+            self.update_for_enemies_turn()
 
     def update_text_number_of_level(self, number_of_level):
         self.level_number = number_of_level
@@ -375,22 +377,22 @@ class Level:
             self.is_enemies_turn = True
             self.is_player_turn = False
 
-    def update_for_enemies_turn(self, *args, **kwargs):
+    def update_for_enemies_turn(self):
         """Обновление уровня вовремя хода врага"""
         self.enemies.update()
         self.cages.update()
         self.traps.update()
         if not self.game_over and self.is_enemies_turn:
-            self.render_players_moves()
             is_all_moved = False
             if self.call_down_for_move_of_enemy <= 0:
                 for n_row, row in enumerate(self.sprites_arr):
                     for n_col, col in enumerate(row):
                         enemies = col[1]
-                        if len(enemies):
+                        if len(enemies) and not is_all_moved:
                             if enemies[0].__class__ != Player and enemies[0] not in self.check_out_list:
                                 enemy = enemies[0]
-                                del self.sprites_arr[enemy.row][enemy.col][1][self.sprites_arr[enemy.row][enemy.col][1].index(enemy)]
+                                idx = self.sprites_arr[enemy.row][enemy.col][1].index(enemy)
+                                del self.sprites_arr[enemy.row][enemy.col][1][idx]
                                 enemy.move((enemy.before_col, enemy.before_row))
                                 self.sprites_arr[enemy.row][enemy.col][1].append(enemy)
                                 self.check_out_list.append(enemy)
@@ -399,7 +401,7 @@ class Level:
                     self.is_enemies_turn = False
                 self.call_down_for_move_of_enemy = 500
             else:
-                self.call_down_for_move_of_enemy -= 1000 / args[1]
+                self.call_down_for_move_of_enemy -= 1000 / FPS
             if not self.ai_turn_is_ended:
                 self.ai_turn_is_ended = True
         else:
@@ -407,6 +409,7 @@ class Level:
             self.is_player_turn = True
             self.ai_turn_is_ended = False
             self.is_enemies_turn = False
+            self.is_pressed_end_move_btn = False
             self.player.is_pressed_end_move_btn = False
 
     def get_events(self):

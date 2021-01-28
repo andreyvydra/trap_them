@@ -464,19 +464,12 @@ class Mob(Sprite):
 
                 cells = [(col, row)]
 
-            cur_cell = self.level.sprites_arr[self.row][self.col]
-            cur_cell[1] = \
-                list(filter(lambda x: x != self,
-                            [character for character in
-                             cur_cell[1]]))
-
             for cell in cells:
                 self.before_col = cell[0]
                 self.before_row = cell[1]
 
             # в этом случае SECOND_LAYER не нужно учитывать
             new_cell = self.level.sprites_arr[cell[1]][cell[0]]
-            new_cell[1].append(self)
             block = new_cell[0]
             if (block.col == self.level.player.col
                     and block.row == self.level.player.row):
