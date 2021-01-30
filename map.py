@@ -172,7 +172,7 @@ class Level:
         self.delta_x = SCALED_CUBE_WIDTH // 2
         self.delta_y = SCALED_TOP_RECT_HEIGHT // 2
 
-        self.call_down_for_move_of_enemy = 500
+        self.call_down_for_move_of_enemy = 0.7
 
         self.all_sprites = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
@@ -362,7 +362,7 @@ class Level:
         if self.is_player_turn:
             self.update_for_players_turn(*args, **kwargs)
         else:
-            self.update_for_enemies_turn()
+            self.update_for_enemies_turn(*args)
 
     def update_text_number_of_level(self, number_of_level):
         self.level_number = number_of_level
@@ -377,7 +377,7 @@ class Level:
             self.is_enemies_turn = True
             self.is_player_turn = False
 
-    def update_for_enemies_turn(self):
+    def update_for_enemies_turn(self, *args):
         """Обновление уровня вовремя хода врага"""
         self.enemies.update()
         self.cages.update()
@@ -399,9 +399,9 @@ class Level:
                     Mob.sound_of_move.play()
                 if not is_all_moved:
                     self.is_enemies_turn = False
-                self.call_down_for_move_of_enemy = 1000
+                self.call_down_for_move_of_enemy = 0.7
             else:
-                self.call_down_for_move_of_enemy -= 1000 / FPS
+                self.call_down_for_move_of_enemy -= args[1]
             if not self.ai_turn_is_ended:
                 self.ai_turn_is_ended = True
         else:

@@ -41,7 +41,8 @@ def game():
     game_music.play(-1, 0, 10000)
 
     while running:
-        td = clock.tick(FPS) / 1000
+        cpu_delay = clock.tick(FPS)
+        td = cpu_delay / 1000
 
         # Проверки на состояние уровня
         if level.game_over and not level.player.alive():
