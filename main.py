@@ -3,6 +3,7 @@ import sys
 
 from menu import *
 from save import *
+from tools import *
 
 
 def game():
@@ -17,17 +18,17 @@ def game():
     # Если в меню была нажата кнопка продолжить игру, то
     # level_map и level просто подгружается, а если нет, то
     # создание карты по дефолту
-    game_music = pygame.mixer.Sound('songs/gameplay.ogg')
+    game_music = pygame.mixer.Sound(make_path('songs/gameplay.ogg'))
     if msg_for_starting == 'continue':
         level_map, level = save.get_level_and_map(screen)
     else:
-        level_map = Map('map', difficulty=data_of_game[0])
+        level_map = Map(make_path('map'), difficulty=data_of_game[0])
         level_map.load_map()
         level = Level(level_map, screen)
         level.load_sprites()
 
     # Добавление кнопки 'закончить ход' в менеджер уровня
-    game_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    game_manager = pygame_gui.UIManager(SCREEN_SIZE, make_path('themes/theme.json'))
     end_move_btn = pygame_gui.elements. \
         UIButton(relative_rect=pygame.rect.Rect((19, 80),
                                                 BUTTON_SIZE_2),
@@ -91,7 +92,7 @@ def game():
             elif upgrades_res == 'third':
                 cage_dis += 1
 
-            level_map = Map('map')
+            level_map = Map(make_path('map'))
             level_map.load_map()
             level = Level(level_map, screen, number_of_level + 1)
             level.load_sprites()
@@ -203,7 +204,7 @@ def pre_game_menu():
         data (list): Данные, собранные из этого игрового меню
     """
     pre_game_manager = pygame_gui.UIManager(SCREEN_SIZE,
-                                            'themes/theme.json')
+                                            make_path('themes/theme.json'))
     btn_width, btn_height = 150, 50
 
     # Алгоритм по созданию прямоугольников под сетку (elements)
@@ -286,7 +287,7 @@ def pause(level):
     pause_surface = pygame.surface.Surface(SCREEN_SIZE)
     # Устанавливаем альфа канал на 100 для прозрачности
     pause_surface.set_alpha(100)
-    pause_manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    pause_manager = pygame_gui.UIManager(SCREEN_SIZE, make_path('themes/theme.json'))
     menu = Menu(pause_manager, continue_btn=True, back_to_menu_btn=True,
                 quit_btn=True, save_btn=True, load_btn=True)
     running = True
@@ -353,7 +354,7 @@ def game_over():
     game_over_surface = pygame.surface.Surface(SCREEN_SIZE)
     game_over_surface.set_alpha(100)
     game_over_manager = pygame_gui.UIManager(SCREEN_SIZE,
-                                             'themes/theme.json')
+                                             make_path('themes/theme.json'))
     menu = Menu(game_over_manager, back_to_menu_btn=True,
                 quit_btn=True, load_btn=True)
     running = True
@@ -392,7 +393,7 @@ def upgrades():
     upgrades_surface = pygame.surface.Surface(SCREEN_SIZE)
     upgrades_surface.set_alpha(100)
     upgrades_manager = pygame_gui.UIManager(SCREEN_SIZE,
-                                            'themes/theme.json')
+                                            make_path('themes/theme.json'))
     menu = UpgradeMenu(upgrades_manager, first_upg_btn=True,
                        second_upg_btn=True, third_upg_btn=True)
     running = True
@@ -432,7 +433,7 @@ def show_statistic():
     running = True
 
     show_stat_manager = pygame_gui. \
-        UIManager(SCREEN_SIZE, 'themes/theme.json')
+        UIManager(SCREEN_SIZE, make_path('themes/theme.json'))
 
     back_rect = pygame.Rect((20, 20), BUTTON_SIZE)
 
@@ -523,7 +524,7 @@ if __name__ == '__main__':
     pygame.mixer.init()
     pygame.init()
 
-    music = pygame.mixer.Sound('songs/main_menu.ogg')
+    music = pygame.mixer.Sound(make_path('songs/main_menu.ogg'))
     music.set_volume(0.25)
     music.play(-1, 0, 10000)
 
@@ -532,13 +533,13 @@ if __name__ == '__main__':
 
     clock = pygame.time.Clock()
 
-    manager = pygame_gui.UIManager(SCREEN_SIZE, 'themes/theme.json')
+    manager = pygame_gui.UIManager(SCREEN_SIZE, make_path('themes/theme.json'))
     main_menu = Menu(manager, continue_btn=True, new_game_btn=True,
                      quit_btn=True, stat_btn=True)
 
-    save = Save('saves/save.pickle')
+    save = Save(make_path('saves/save.pickle'))
 
-    bg = pygame.image.load('bgs/menu_bg.png')
+    bg = pygame.image.load(make_path('bgs/menu_bg.png'))
     bg = pygame.transform.scale(bg, SCREEN_SIZE)
 
     is_button_game_pressed = False

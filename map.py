@@ -149,8 +149,10 @@ class Level:
         level_number_text(Surface): надпись с номеров уровня
 
     """
-    backgrounds = {2: pygame.image.load('bgs/level_bg_2.jpg'),
-                   3: pygame.image.load('bgs/level_bg_3.jpg')}
+    backgrounds = {
+        2: pygame.image.load(make_path('bgs/level_bg_2.jpg')),
+        3: pygame.image.load(make_path('bgs/level_bg_3.jpg'))
+    }
 
     def __init__(self, level_map, screen, level_number=1):
         self.level_map = level_map

@@ -27,7 +27,7 @@ class Save:
         self.path_save = path_save
 
     def get_data(self):
-        with open('saves/save.pickle', 'rb') as file:
+        with open(self.path_save, 'rb') as file:
             return pickle.load(file)
 
     def get_level_and_map(self, screen):
@@ -44,7 +44,7 @@ class Save:
         player_data = self.get_player_data(level)
         level_data = self.get_level_data(level)
         map_data = self.get_map_data(level)
-        with open('saves/save.pickle', 'wb') as file:
+        with open(self.path_save, 'wb') as file:
             pickle.dump([player_data, level_data, map_data], file)
 
     def get_level_data(self, level):

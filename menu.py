@@ -1,6 +1,7 @@
 import pygame_gui
 from settings import *
 import pygame
+from tools import *
 
 
 class Menu:
@@ -197,7 +198,7 @@ class UpgradeMenu:
 
         first_upg_image = pygame_gui.elements.UIImage(
             relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-            image_surface=pygame.image.load('sprites/+hp.png'),
+            image_surface=pygame.image.load(make_path('sprites/+hp.png')),
             manager=self.manager)
         self.first_upg_btn = first_upg_btn
         self.first_upg_image = first_upg_image
@@ -210,7 +211,7 @@ class UpgradeMenu:
 
         second_upg_image = pygame_gui.elements.UIImage(
             relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-            image_surface=pygame.image.load('sprites/+mp.png'),
+            image_surface=pygame.image.load(make_path('sprites/+mp.png')),
             manager=self.manager)
 
         self.second_upg_btn = second_upg_btn
@@ -223,7 +224,7 @@ class UpgradeMenu:
             manager=self.manager)
         third_upg_image = pygame_gui.elements.UIImage(
             relative_rect=pygame.Rect((0, 0), UPGRADE_IMAGE_SIZE),
-            image_surface=pygame.image.load('sprites/+cage_distance.png'),
+            image_surface=pygame.image.load(make_path('sprites/+cage_distance.png')),
             manager=self.manager)
         self.third_upg_btn = third_upg_btn
         self.third_upg_image = third_upg_image

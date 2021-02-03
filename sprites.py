@@ -1,6 +1,7 @@
 import pygame
 from collections import deque
 from settings import *
+from tools import *
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -44,12 +45,13 @@ class Floor(Block):
         check_collide_rop_rect(mouse_pos): проверка позиции мыши
          на пересечение с верхним прямоугольником спрайта пола
     """
-
-    images = {0: pygame.image.load('sprites/floor/floor-0-0.png'),
-              1: pygame.image.load('sprites/floor/floor-1-0.png'),
-              2: pygame.image.load('sprites/floor/floor-2-0.png'),
-              3: pygame.image.load('sprites/floor/floor-3-0.png')
-              }
+    print(make_path('sprites/floor/floor-0-0.png'))
+    images = {
+        0: pygame.image.load(make_path('sprites/floor/floor-0-0.png')),
+        1: pygame.image.load(make_path('sprites/floor/floor-1-0.png')),
+        2: pygame.image.load(make_path('sprites/floor/floor-2-0.png')),
+        3: pygame.image.load(make_path('sprites/floor/floor-3-0.png'))
+    }
 
     def __init__(self, col, row, x, y, *groups, type_of_block=0):
         super().__init__(Floor.images[type_of_block], col, row, x, y, *groups)
@@ -107,7 +109,7 @@ class Player(Sprite):
         move(cell): перемещение в клетку cell
     """
 
-    img = pygame.image.load('sprites/gg_sprites.png')
+    img = pygame.image.load(make_path('sprites/gg_sprites.png'))
 
     def __init__(self, level, col, row, x, y, *groups,
                  coins=5, steps=2, health=5, max_health=5, max_steps=2,
@@ -254,8 +256,8 @@ class Cage(Sprite):
         update(): update клетки
     """
 
-    image = pygame.image.load('sprites/cage.png')
-    trap_image = pygame.image.load('sprites/trap.png')
+    image = pygame.image.load(make_path('sprites/cage.png'))
+    trap_image = pygame.image.load(make_path('sprites/trap.png'))
 
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Cage.image, col, row, x, y, *groups)
@@ -371,14 +373,15 @@ class Coin(Sprite):
     Methods:
         update(): update спрайта монеты
     """
-    image = pygame.image.load('sprites/coin.png')
+    image = pygame.image.load(make_path('sprites/coin.png'))
 
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Coin.image, col, row, x, y, *groups)
         self.drawing_col = col + SECOND_LAYER
         self.drawing_row = row + SECOND_LAYER
         self.level = level
-        self.pick_up_sound = pygame.mixer.Sound('sounds/coin/pick_up.ogg')
+        self.pick_up_sound = pygame.mixer\
+            .Sound(make_path('sounds/coin/pick_up.ogg'))
         self.pick_up_sound.set_volume(0.05)
 
     def update(self, *args, **kwargs):
@@ -407,9 +410,9 @@ class Mob(Sprite):
         coins(int): количество монет за поимку моба
         step(int): количество шагов
     """
-    img = pygame.image.load('sprites/mob.png')
-    sound_of_move = pygame.mixer.Sound('sounds/mob/move.ogg')
-    sound_of_hit = pygame.mixer.Sound('sounds/mob/hit.ogg')
+    img = pygame.image.load(make_path('sprites/mob.png'))
+    sound_of_move = pygame.mixer.Sound(make_path('sounds/mob/move.ogg'))
+    sound_of_hit = pygame.mixer.Sound(make_path('sounds/mob/hit.ogg'))
     sound_of_hit.set_volume(0.2)
 
     def __init__(self, level, col, row, x, y, *groups,
