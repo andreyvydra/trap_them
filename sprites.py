@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 from collections import deque
 from settings import *
@@ -262,8 +264,12 @@ class Cage(Sprite):
     def __init__(self, level, col, row, x, y, *groups):
         super().__init__(Cage.image, col, row, x, y, *groups)
         self.level = level
+
         self.velocity = 60
         self.image = Cage.image
+
+        # Служит для подсчёта остатоков при делении нацело при перемещении
+        self.delta_remainder = 0
 
         # Для отслеживания падения клетки
         self.is_fallen = False
@@ -278,18 +284,37 @@ class Cage(Sprite):
 
     def update(self, *args, **kwargs):
         """Update спрайта клетки"""
-
+        fps = args[2]
         trapped_characters_cell = \
             self.level.sprites_arr[self.row][self.col]
         if not self.is_fallen:
             self.level.cages.add(self)
             self.rect.y -= self.top_rect_height
             if trapped_characters_cell[1]:
-                self.rect.y += self.velocity // FPS
+
+                delta = self.velocity / fps
+                # Остатки от деления будут сохраняться для того,
+                # в дальнейшем всё коррекнто отрисовывалось
+                self.delta_remainder += delta - round(delta)
+
+                if self.delta_remainder >= 1:
+                    self.rect.y += round(delta) + self.delta_remainder
+                    self.delta_remainder -= round(self.delta_remainder)
+                elif 0 <= round(self.delta_remainder + delta) <= 1:
+                    # Здесь приходится 'взять взаймы' у delta_remainder
+                    # если он не дотягивает до одного пикселя, то он
+                    # примет отрицательное значение
+                    self.rect.y += 1
+                    self.delta_remainder = self.delta_remainder + delta -\
+                                           round(self.delta_remainder + delta)
+                else:
+                    self.rect.y += round(delta)
+
                 floor = trapped_characters_cell[0]
-                if self.rect.colliderect(floor.rect):
-                    self.rect.y -= self.velocity // FPS
+                if self.rect.bottomright[1] >= floor.rect.y:
+                    self.rect.y -= round(delta)
                     self.is_fallen = True
+                    sys.exit()
 
             else:
                 block = trapped_characters_cell[0]

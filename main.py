@@ -149,8 +149,9 @@ def game():
 
             game_manager.process_events(event)
 
-        level.update(event, td)
+        level.update(event, td, clock.get_fps())
         level.render()
+        show_fps(screen, clock.get_fps())
 
         # Отрисовка сетки
         # for rect in level_map.floor:
