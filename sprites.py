@@ -265,6 +265,7 @@ class Cage(Sprite):
         super().__init__(Cage.image, col, row, x, y, *groups)
         self.level = level
 
+        # Для подстроховки)
         self.velocity = 60
         self.image = Cage.image
 
@@ -314,7 +315,6 @@ class Cage(Sprite):
                 if self.rect.bottomright[1] >= floor.rect.y:
                     self.rect.y -= round(delta)
                     self.is_fallen = True
-                    sys.exit()
 
             else:
                 block = trapped_characters_cell[0]
