@@ -32,7 +32,7 @@ def game():
     end_move_btn = pygame_gui.elements. \
         UIButton(relative_rect=pygame.rect.Rect((19, 80),
                                                 BUTTON_SIZE_2),
-                 text='Закончить ход',
+                 text='End turn',
                  manager=game_manager)
     level.manager = game_manager
 
