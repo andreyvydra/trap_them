@@ -10,7 +10,7 @@ Turn-based strategy in which the player needs to defeat enemies, but you can onl
 The character can move through the cells, with this, the number of player actions is limited, but can be increased by increasing the skill.
 The player has limited health, if it runs out, the player loses.
 Levels will be generated randomly based on difficulty.
-Complexity mainly affects the level of AI and the number of enemies.
+Difficulty mainly affects the level of AI and the number of enemies.
 The game is realized in isometric view. 
 
 ## Technologies
