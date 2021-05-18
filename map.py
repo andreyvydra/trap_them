@@ -381,9 +381,9 @@ class Level:
 
     def update_for_enemies_turn(self, *args):
         """Обновление уровня вовремя хода врага"""
-        self.enemies.update()
-        self.cages.update()
-        self.traps.update()
+        self.enemies.update(*args)
+        self.cages.update(*args)
+        self.traps.update(*args)
         if not self.game_over and self.is_enemies_turn:
             is_all_moved = False
             if self.call_down_for_move_of_enemy <= 0:
